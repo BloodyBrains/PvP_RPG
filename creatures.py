@@ -1,6 +1,8 @@
 # creatures.py
 
 import abc
+import os
+
 import pygame
 
 #import actions

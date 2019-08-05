@@ -3,6 +3,8 @@
 # TO DO:
 #       Bind camera movement to remain within the map
 
+import os
+
 import pygame
 
 import constants
@@ -10,7 +12,7 @@ import constants
 
 class IsoGrid():
     tiles = {}
-    tiles['dirtsand'] = pygame.image.load('tile_sanddirt.png')
+    tiles['dirtsand'] = pygame.image.load(os.path.join(constants.ASSETS, 'tile_sanddirt.png'))
     #iso_tile.set_colorkey((0, 0, 0))
 
     map_data = [

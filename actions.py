@@ -5,9 +5,11 @@ Returns:
     [type] -- [description]
 """
 import abc
+import os
 
 import pygame
 
+import constants
 from functions import iso_to_cart
 
 
@@ -23,7 +25,7 @@ class Action:
 
 
 class Move(Action):
-    tile = pygame.image.load('move_tile.png')
+    tile = pygame.image.load(os.path.join(constants.ASSETS, 'move_tile.png'))
     #tile.set_alpha(100)
     ID = 'move'
 

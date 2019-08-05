@@ -1,6 +1,7 @@
 # game_states.py
 import abc
 import math
+import os
 
 import pygame
 
@@ -37,10 +38,10 @@ class StartScreen(GameState):
         start screen is active
     """
 
-    bgr = pygame.image.load('start_screen_bgr.png')
+    bgr = pygame.image.load(os.path.join(constants.ASSETS, 'start_screen_bgr.png'))
     buttons = {}
     buttons['play'] = Button('play_button', 
-                             pygame.image.load('play_button.png'))
+                             pygame.image.load(os.path.join(constants.ASSETS, 'play_button.png')))
     visibles = []
     switch_to_states = []
 
@@ -93,10 +94,10 @@ class StartScreen(GameState):
 class RosterEdit(GameState):
     '''Game State for "Creature Edit Screen"'''
 
-    bgr = pygame.image.load('nebula_bgr.png')
+    bgr = pygame.image.load(os.path.join(constants.ASSETS, 'nebula_bgr.png'))
     buttons = {}
     buttons['play'] = Button('play_button',
-                             pygame.image.load('play_button.png')) 
+                             pygame.image.load(os.path.join(constants.ASSETS, 'play_button.png'))) 
 
     offset = 10 # space between sprites in roster rect area
     total_positions = 0
@@ -233,8 +234,8 @@ class RosterEdit(GameState):
 
 
 class BattleScreen(GameState):
-    bgr = pygame.image.load('nebula_bgr.png')
-    tile_selected = pygame.image.load('tile_selected.png')
+    bgr = pygame.image.load(os.path.join(constants.ASSETS, 'nebula_bgr.png'))
+    tile_selected = pygame.image.load(os.path.join(constants.ASSETS, 'tile_selected.png'))
 
     # action buttons for the active turn menu
     action_buttons = {}
@@ -549,7 +550,7 @@ class BattleScreen(GameState):
 
 
 class TurnMenu:
-    button_blank = pygame.image.load('button_turn_menu_blank.png')
+    button_blank = pygame.image.load(os.path.join(constants.ASSETS, 'button_turn_menu_blank.png'))
     font = pygame.font.SysFont('Arial', 10)
     button_width = button_blank.get_width()
     button_height = button_blank.get_height()

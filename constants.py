@@ -1,4 +1,8 @@
 #GLOBALS
+import os
+
+ASSETS = os.path.join(os.path.dirname(__file__), 'resources')
+
 screen_width = 640
 screen_height = 480
 TILE_WIDTH = 192

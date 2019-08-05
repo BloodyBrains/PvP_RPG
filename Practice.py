@@ -17,12 +17,14 @@
 #           camera move event is registered and only check once per update
 #           if the flag has been set           
 #        Change the way creatures move from using self.pos to self.rect
+#        variable run is not being used to break the game loop.
 #        Check how python stores instances
 #        Setup RosterEdit state to show selected creature and properties
 #        Call Surface.convert for all images in __init__()
 #                               or
 #        Move all class resource loading into class 'load' method and call
 #           after pygame.init()
+#           Or, make a load_image function to wrap pygame.load.image()
 #
 # RESEARCH: 
 #           pygame.init() - faster to manually init pygame modules as needed?
@@ -55,7 +57,7 @@ import player
 def load_image(file):
     "loads an image, prepares it for play"
     try:
-        surface = pygame.image.load(file).convert()
+        surface = pygame.image.load(os.path.join(constants.ASSETS, file)).convert()
     except pygame.error:
         raise SystemExit('Could not load image "%s" %s'%(file, pygame.get_error()))
     return surface
