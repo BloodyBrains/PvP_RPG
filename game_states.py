@@ -321,49 +321,49 @@ class BattleScreen(GameState):
             '''
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    cls.cam_speed_x = constants.CAM_SPEED
+                    camera.x_speed = constants.CAM_SPEED
                     iso_grid.IsoGrid.velocity_x = constants.CAM_SPEED
-                    for agent in cls.agents.values():
-                        agent.cam_speed_x = constants.CAM_SPEED
+                    #for agent in cls.agents.values():
+                    #    agent.cam_speed_x = constants.CAM_SPEED
                 elif event.key == pygame.K_RIGHT:
-                    cls.cam_speed_x = -constants.CAM_SPEED
+                    camera.x_speed = -constants.CAM_SPEED
                     iso_grid.IsoGrid.velocity_x = -constants.CAM_SPEED
-                    for agent in cls.agents.values():
-                        agent.cam_speed_x = -constants.CAM_SPEED
+                    #for agent in cls.agents.values():
+                    #    agent.cam_speed_x = -constants.CAM_SPEED
 
                 if event.key == pygame.K_UP:
-                    cls.cam_speed_y = constants.CAM_SPEED
+                    camera.y_speed = constants.CAM_SPEED
                     iso_grid.IsoGrid.velocity_y = constants.CAM_SPEED
-                    for agent in cls.agents.values():
-                        agent.cam_speed_y = constants.CAM_SPEED
+                    #for agent in cls.agents.values():
+                    #    agent.cam_speed_y = constants.CAM_SPEED
                 elif event.key == pygame.K_DOWN:
-                    cls.cam_speed_y = -constants.CAM_SPEED
+                    camera.y_speed = -constants.CAM_SPEED
                     iso_grid.IsoGrid.velocity_y = -constants.CAM_SPEED
-                    for agent in cls.agents.values():
-                        agent.cam_speed_y = -constants.CAM_SPEED
+                    #for agent in cls.agents.values():
+                    #    agent.cam_speed_y = -constants.CAM_SPEED
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
-                    cls.cam_speed_x = 0
+                    camera.x_speed = 0
                     iso_grid.IsoGrid.velocity_x = 0
-                    for agent in cls.agents.values():
-                        agent.cam_speed_x = 0
+                    #for agent in cls.agents.values():
+                    #    agent.cam_speed_x = 0
                 elif event.key == pygame.K_RIGHT:
-                    cls.cam_speed_x = 0
+                    camera.x_speed = 0
                     iso_grid.IsoGrid.velocity_x = 0
-                    for agent in cls.agents.values():
-                        agent.cam_speed_x = 0
+                    #for agent in cls.agents.values():
+                    #    agent.cam_speed_x = 0
 
                 if event.key == pygame.K_UP:
-                    cls.cam_speed_y = 0
+                    camera.y_speed = 0
                     iso_grid.IsoGrid.velocity_y = 0
-                    for agent in cls.agents.values():
-                        agent.cam_speed_y = 0
+                    #for agent in cls.agents.values():
+                    #    agent.cam_speed_y = 0
                 elif event.key == pygame.K_DOWN:
-                    cls.cam_speed_y = 0
+                    camera.y_speed = 0
                     iso_grid.IsoGrid.velocity_y = 0
-                    for agent in cls.agents.values():
-                        agent.cam_speed_y = 0
+                    #for agent in cls.agents.values():
+                    #    agent.cam_speed_y = 0
             
 
             # Check for clicks
@@ -388,16 +388,21 @@ class BattleScreen(GameState):
                     if button.rect.collidepoint(pos):
                         print(button.id)
                         if button.id == 'move':
-                            cls.turn_action = button.id     
+                            cls.turn_action = button.id 
 
         cls.cam_offset_x += cls.cam_speed_x
         cls.cam_offset_y += cls.cam_speed_y
 
+        # Update camera offset
         camera.offset_x += camera.x_speed
         camera.offset_y += camera.y_speed
 
         for agent in cls.agents.values():
-            agent.update()
+            # Update positions for camera movement
+            x = agent.pos[0] + camera.x_speed
+            y = agent.pos[1] + camera.y_speed
+            agent.pos = (x, y)
+
             agent.run_state()
 
         if cls.turn_menu.show:
@@ -433,11 +438,13 @@ class BattleScreen(GameState):
                 + cls.cam_offset_y)
         pos = (pos_x, pos_y)
         game_win.blit(cls.tile_selected, pos)
-        '''
+        
         pos = iso_to_cart(cls.selected_agent.iso_pos)
         pos_x = (pos[0] + camera.offset_x)
         pos_y = (pos[1] + camera.offset_y)
         game_win.blit(cls.tile_selected, (pos_x, pos_y))
+        '''
+        game_win.blit(cls.tile_selected, cls.selected_agent.pos)
 
         # TEMPORARY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         # draw valid move tiles for active agent
@@ -472,6 +479,13 @@ class BattleScreen(GameState):
         player.player2.pos = iso_to_cart(player.player2.iso_pos,
                                      player.player2.width,
                                      player.player2.height)
+
+        # Update agents pos for camera offset
+        for agent in cls.agents.values():
+            x = agent.pos[0] + camera.offset_x
+            y = agent.pos[1] + camera.offset_y
+            agent.pos = (x, y)
+
 
         '''
         i = 0

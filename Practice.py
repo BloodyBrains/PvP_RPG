@@ -8,16 +8,14 @@
 #        Make a file for general purpose methods: iso_to_cart() 
 #        Change all class 'id' attributes to 'ID' to avoid conflicts
 #        Make an Agent base class for Creatures and Player to derive from
-#        Make a camera class to store the camera offset and add it to
-#           instances positions in update() (remove from draw()).
-#           Or, research culling and possibly move only the camera, drawing
-#           only what's in the camera FOV.
-#           Or, use an Observer pattern to call pos_update(cam_offset) for 
-#           all instances currently being rendered. Set a flag when a
-#           camera move event is registered and only check once per update
-#           if the flag has been set           
+#        Use pygame sprite groups, layered updates and dirty sprites to 
+#           improve perform
+#        How to update IsoGrid positions for camera movement         
 #        Change the way creatures move from using self.pos to self.rect
+#           Or, use pygame.math.vector2 (should help with moving)
 #        variable run is not being used to break the game loop.
+#        Make a camera class and possibly use culling to move only the camera, 
+#           drawing only what's in the camera FOV.
 #        Check how python stores instances
 #        Setup RosterEdit state to show selected creature and properties
 #        Call Surface.convert for all images in __init__()

@@ -45,17 +45,24 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
     def __str__(self):
         return self.name
 
-    def update(self):
+    def update(self, cam_offset):
         # Handle position adjustment for camera movement
         # TO DO: Maybe do this in the creature state?
         #   I don't like calling creature.update() and creature.run_state()
-        self.offset_x += self.cam_speed_x
-        self.offset_y += self.cam_speed_y
+        #self.offset_x += self.cam_speed_x
+        #self.offset_y += self.cam_speed_y
+        x = self.pos[0] + cam_offset[0]
+        y = self.pos[1] + cam_offset[1]
+        self.pos = (x, y)
 
     def draw(self, surface):
+        '''
         surface.blit(self.state.animation[self.state.curr_frame], 
                     (iso_grid.IsoGrid.start_x + self.pos[0] + self.offset_x,
                      iso_grid.IsoGrid.start_y + self.pos[1] + self.offset_y))
+        '''
+        surface.blit(self.state.animation[self.state.curr_frame], 
+                     self.pos)
 
     @abc.abstractmethod
     def on_event(self, event): pass
