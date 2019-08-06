@@ -18,9 +18,9 @@ SPEED = 4
 
 
 class Creature(abc.ABC, pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, pos=(0, 0)):
         super().__init__()
-        self.pos = (0, 0)
+        self.pos = pos
         self.iso_pos = None # tuple position with respect to the isometric
                             # battle grid
         self.width = 0 #sprite height
@@ -33,7 +33,7 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
         self.cam_speed_y = 0
         self.offset_y = 0 # camera offset
         self.image = None
-        self.rect = None
+        self.rect = pygame.Rect((self.pos), (SPRITE_W, SPRITE_H))
         self.speed = 0
         self.ap = 0
         self.actions = {} #dict of all actions owned by agent
@@ -45,22 +45,16 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
     def __str__(self):
         return self.name
 
+    # unused
     def update(self, cam_offset):
         # Handle position adjustment for camera movement
         # TO DO: Maybe do this in the creature state?
         #   I don't like calling creature.update() and creature.run_state()
-        #self.offset_x += self.cam_speed_x
-        #self.offset_y += self.cam_speed_y
         x = self.pos[0] + cam_offset[0]
         y = self.pos[1] + cam_offset[1]
-        self.pos = (x, y)
+        self.rect.move(x, y)
 
     def draw(self, surface):
-        '''
-        surface.blit(self.state.animation[self.state.curr_frame], 
-                    (iso_grid.IsoGrid.start_x + self.pos[0] + self.offset_x,
-                     iso_grid.IsoGrid.start_y + self.pos[1] + self.offset_y))
-        '''
         surface.blit(self.state.animation[self.state.curr_frame], 
                      self.pos)
 

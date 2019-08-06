@@ -38,8 +38,8 @@ class IsoGrid():
     velocity_y = 0
     offset_y = 0
 
-    start_x = constants.ISO_GRID_STARTX
-    start_y = constants.ISO_GRID_STARTY
+    start_x = constants.CAM_STARTX
+    start_y = constants.CAM_STARTY
 
     tile = None
 

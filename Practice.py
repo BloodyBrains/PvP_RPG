@@ -4,7 +4,8 @@
 
 #//////////////////////////////////////////////////////////////////////////
 # TO DO: 
-#        Make a list of creature instances for game_states.RosterEdit.roster
+#        bug: If active_agent is not selected, disable turn_menu.
+#               You can currently still click on it even when it's hidden.
 #        Make a file for general purpose methods: iso_to_cart() 
 #        Change all class 'id' attributes to 'ID' to avoid conflicts
 #        Make an Agent base class for Creatures and Player to derive from

@@ -18,7 +18,13 @@ class Action:
         self._owner = owner
 
     @abc.abstractmethod
-    def check_reqs(self): pass
+    def check_reqs(self):
+        """Use to check if the owner has the requirements to perform
+                the action. If so, add the action ID to the agents
+                valid_actions list
+            Returns bool
+        """
+        pass
 
     @abc.abstractmethod
     def run(self): pass

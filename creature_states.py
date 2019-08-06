@@ -105,7 +105,7 @@ class DieState(State):
         if event == 'prev':
             return 'prev'
 
-
+# unused
 class Moving(State):
     def __init__(self, animation, anim_speed):
         self.animation = animation
@@ -130,7 +130,7 @@ class Moving(State):
             return 'prev'
 
 
-
+#unused
 class ActiveTurnState(State):
     def __init__(self, animation, anim_speed):
         self.animation = animation

@@ -236,6 +236,7 @@ class RosterEdit(GameState):
 class BattleScreen(GameState):
     bgr = pygame.image.load(os.path.join(constants.ASSETS, 'nebula_bgr.png'))
     tile_selected = pygame.image.load(os.path.join(constants.ASSETS, 'tile_selected.png'))
+    tile_selected_pos = (0, 0)
 
     # action buttons for the active turn menu
     action_buttons = {}
@@ -248,8 +249,8 @@ class BattleScreen(GameState):
     player_positions = [(3, 5), (3, 2)] # starting positions for players
     turn_order = [] # list of creature ids in their turn order
     agents = {} # dict of all agents on screen
-    active_agent = None # Ref to the creature or other agent whose turn it is 
-    selected_agent = None
+    active_agent = None # the creature or other agent whose turn it is 
+    selected_agent = None #agent who is selected
 
     cam_speed_x = 0 # Number of pixels cam moves per update call. Set to 0 when
                   #     cam is not moving
@@ -271,124 +272,66 @@ class BattleScreen(GameState):
                 pygame.display.quit()
                 raise SystemExit
 
-            '''
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     camera.x_speed = constants.CAM_SPEED
                     iso_grid.IsoGrid.velocity_x = constants.CAM_SPEED
-                    for agent in cls.agents.values():
-                        agent.cam_speed_x = constants.CAM_SPEED
                 elif event.key == pygame.K_RIGHT:
                     camera.x_speed = -constants.CAM_SPEED
                     iso_grid.IsoGrid.velocity_x = -constants.CAM_SPEED
-                    for agent in cls.agents.values():
-                        agent.cam_speed_x = -constants.CAM_SPEED
 
                 if event.key == pygame.K_UP:
                     camera.y_speed = constants.CAM_SPEED
                     iso_grid.IsoGrid.velocity_y = constants.CAM_SPEED
-                    for agent in cls.agents.values():
-                        agent.cam_speed_y = constants.CAM_SPEED
                 elif event.key == pygame.K_DOWN:
                     camera.y_speed = -constants.CAM_SPEED
                     iso_grid.IsoGrid.velocity_y = -constants.CAM_SPEED
-                    for agent in cls.agents.values():
-                        agent.cam_speed_y = -constants.CAM_SPEED
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
                     camera.x_speed = 0
                     iso_grid.IsoGrid.velocity_x = 0
-                    for agent in cls.agents.values():
-                        agent.cam_speed_x = 0
                 elif event.key == pygame.K_RIGHT:
                     camera.x_speed = 0
                     iso_grid.IsoGrid.velocity_x = 0
-                    for agent in cls.agents.values():
-                        agent.cam_speed_x = 0
 
                 if event.key == pygame.K_UP:
                     camera.y_speed = 0
                     iso_grid.IsoGrid.velocity_y = 0
-                    for agent in cls.agents.values():
-                        agent.cam_speed_y = 0
                 elif event.key == pygame.K_DOWN:
                     camera.y_speed = 0
                     iso_grid.IsoGrid.velocity_y = 0
-                    for agent in cls.agents.values():
-                        agent.cam_speed_y = 0
-
-            '''
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    camera.x_speed = constants.CAM_SPEED
-                    iso_grid.IsoGrid.velocity_x = constants.CAM_SPEED
-                    #for agent in cls.agents.values():
-                    #    agent.cam_speed_x = constants.CAM_SPEED
-                elif event.key == pygame.K_RIGHT:
-                    camera.x_speed = -constants.CAM_SPEED
-                    iso_grid.IsoGrid.velocity_x = -constants.CAM_SPEED
-                    #for agent in cls.agents.values():
-                    #    agent.cam_speed_x = -constants.CAM_SPEED
-
-                if event.key == pygame.K_UP:
-                    camera.y_speed = constants.CAM_SPEED
-                    iso_grid.IsoGrid.velocity_y = constants.CAM_SPEED
-                    #for agent in cls.agents.values():
-                    #    agent.cam_speed_y = constants.CAM_SPEED
-                elif event.key == pygame.K_DOWN:
-                    camera.y_speed = -constants.CAM_SPEED
-                    iso_grid.IsoGrid.velocity_y = -constants.CAM_SPEED
-                    #for agent in cls.agents.values():
-                    #    agent.cam_speed_y = -constants.CAM_SPEED
-
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT:
-                    camera.x_speed = 0
-                    iso_grid.IsoGrid.velocity_x = 0
-                    #for agent in cls.agents.values():
-                    #    agent.cam_speed_x = 0
-                elif event.key == pygame.K_RIGHT:
-                    camera.x_speed = 0
-                    iso_grid.IsoGrid.velocity_x = 0
-                    #for agent in cls.agents.values():
-                    #    agent.cam_speed_x = 0
-
-                if event.key == pygame.K_UP:
-                    camera.y_speed = 0
-                    iso_grid.IsoGrid.velocity_y = 0
-                    #for agent in cls.agents.values():
-                    #    agent.cam_speed_y = 0
-                elif event.key == pygame.K_DOWN:
-                    camera.y_speed = 0
-                    iso_grid.IsoGrid.velocity_y = 0
-                    #for agent in cls.agents.values():
-                    #    agent.cam_speed_y = 0
             
 
             # Check for clicks
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
-                '''
-                for button in cls.roster_buttons:
-                    if button.rect.collidepoint(pos): 
-                        cls.selected = button.id
-                        print(cls.selected)
+                for agent in cls.agents.values():
+                    if agent.rect.collidepoint(pos): 
+                        cls.selected_agent = agent
+                        cls.tile_selected_pos = iso_to_cart(cls.selected_agent.iso_pos, with_offset=1)
+                        if cls.selected_agent == cls.active_agent:
+                            cls.turn_menu.show = True
+                        else:
+                            cls.turn_menu.show = False
+
                         break
                     else:
                         print("not clicked")
-
+                '''
                 for button in cls.buttons.values():
                     if button.rect.collidepoint(pos):
                         print(button.id)
                         if button.id == 'play_button':
                             return 'battle_screen'
                 '''
+
                 for button in cls.turn_menu.buttons.values():
                     if button.rect.collidepoint(pos):
                         print(button.id)
                         if button.id == 'move':
-                            cls.turn_action = button.id 
+                            cls.turn_action = button.id
+
 
         cls.cam_offset_x += cls.cam_speed_x
         cls.cam_offset_y += cls.cam_speed_y
@@ -402,20 +345,24 @@ class BattleScreen(GameState):
             x = agent.pos[0] + camera.x_speed
             y = agent.pos[1] + camera.y_speed
             agent.pos = (x, y)
+            agent.rect.move_ip(camera.x_speed, camera.y_speed)
 
             agent.run_state()
+
+        #Update tile_selected
+        x = cls.tile_selected_pos[0] + camera.x_speed
+        y = cls.tile_selected_pos[1] + camera.y_speed
+        cls.tile_selected_pos = (x, y)
 
         if cls.turn_menu.show:
             cls.turn_menu.update()
 
-        if cls.active_agent is None:
+        if cls.active_agent is None: #Get the next turn, center cam on agent
             agent = cls.turn_order.pop(0)
             cls.active_agent = player.player1.roster[agent]
             cls.turn_order.append(cls.calc_turn_order(1))
 
         cls.active_agent.take_turn(cls.turn_action)
-
-        #player.player1.take_turn()
 
         iso_grid.IsoGrid.update()
 
@@ -427,31 +374,12 @@ class BattleScreen(GameState):
         iso_grid.IsoGrid.draw_tiles(game_win)
 
         # draw rectangle on selected agents tile
-        # TO DO: create a selected_tile object and update it's pos in update()
-        '''
-        pos = iso_to_cart(cls.selected_agent.iso_pos)
-        pos_x = (pos[0]
-                + iso_grid.IsoGrid.start_x
-                + cls.cam_offset_x)
-        pos_y = (pos[1]
-                + iso_grid.IsoGrid.start_y
-                + cls.cam_offset_y)
-        pos = (pos_x, pos_y)
-        game_win.blit(cls.tile_selected, pos)
-        
-        pos = iso_to_cart(cls.selected_agent.iso_pos)
-        pos_x = (pos[0] + camera.offset_x)
-        pos_y = (pos[1] + camera.offset_y)
-        game_win.blit(cls.tile_selected, (pos_x, pos_y))
-        '''
-        game_win.blit(cls.tile_selected, cls.selected_agent.pos)
+        game_win.blit(cls.tile_selected, cls.tile_selected_pos)
 
-        # TEMPORARY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # TO DO: Move this to the actions.Move.draw()
         # draw valid move tiles for active agent
-        offsetx = iso_grid.IsoGrid.start_x + cls.cam_offset_x
-        offsety = iso_grid.IsoGrid.start_y + cls.cam_offset_y
         for t in cls.active_agent.valid_moves:
-            game_win.blit(actions.Move.tile, (t[0] + offsetx, t[1] + offsety))
+            game_win.blit(actions.Move.tile, (t[0] + camera.offset_x, t[1] + camera.offset_y))
 
         for agent in cls.agents.values():
             agent.draw(game_win)
@@ -461,12 +389,15 @@ class BattleScreen(GameState):
 
     @classmethod
     def on_enter(cls):
+        """State setup. Called when the state is first transitioned to.
+        """
         # Sets the starting positions of all active agents.
         # Calculates the order of the first x amount of turns
         # Initializes turn_order list with two players
         # Sets active_agent to the first agent in turn_order list
         # Instantiates the Turn_Menu
 
+        # Create the two players
         # set the player's positions to the starting positions
         cls.agents['player1'] = player.player1
         cls.agents['player2'] = player.player2
@@ -485,6 +416,9 @@ class BattleScreen(GameState):
             x = agent.pos[0] + camera.offset_x
             y = agent.pos[1] + camera.offset_y
             agent.pos = (x, y)
+            agent.rect = pygame.Rect((agent.pos),
+                                           (agent.width,
+                                           agent.height))
 
 
         '''
@@ -503,11 +437,13 @@ class BattleScreen(GameState):
         # Calculate the turn order for the next x amount of turns
         cls.turn_order.extend(cls.calc_turn_order(10))
 
-        # Set the active_agent and append the next turn to the list
+        # Set the active_agent, selected_agent and selected_tile. 
+        # Append the next turn to the list
         agent = cls.turn_order.pop(0)
         cls.active_agent = cls.agents[agent]
         cls.turn_order.append(cls.calc_turn_order(1))
         cls.selected_agent = cls.active_agent
+        cls.tile_selected_pos = iso_to_cart(cls.selected_agent.iso_pos, with_offset=1)
 
         # Set the turn menu for the active agent
         cls.turn_menu = TurnMenu()
