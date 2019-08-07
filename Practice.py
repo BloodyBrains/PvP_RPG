@@ -9,6 +9,8 @@
 #        Make a list of texts that need to be displayed along with their
 #               positions. Append them as needed and render all during
 #               draw()
+#        Consolidate actions.Move._get_move_tiles and make_move_buttons
+#               into one.
 #        Change all class 'id' attributes to 'ID' to avoid conflicts
 #        Make an Agent base class for Creatures and Player to derive from
 #        Use pygame sprite groups, layered updates and dirty sprites to 

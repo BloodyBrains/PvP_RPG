@@ -54,8 +54,6 @@ class Player(creatures.Creature):
         self.speed = 5
         self.ap = self.speed
         
-        self.valid_moves = [] # list of tiles which are valid moves
-
         self.actions['move'] = actions.Move(self)
 
         # Give the player some creatures. Change later!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -87,39 +85,36 @@ class Player(creatures.Creature):
             self.roster_ids.append(elem[0])
             print(self.roster)
 
-    def take_turn(self, action):
-        if self.turn_state == 'init':
-            # Assess the current state of the battle
-            # Assemble valid_actions list
-            # Assemble BattleScreen.turn_menu
-            # Set turn_state to 'update'
+    def turn_init(self):
+        """Assembles the agents valid_actions list
+        """
+        # Assess the current state of the battle
+        # Assemble valid_actions list
+        # Assemble BattleScreen.turn_menu
+        # Set turn_state to 'update'
 
-            # check if new summons are available
-            '''
-            for creature in self.roster.values():
-                for item in creature.requirements.items():
-                    if self.requirements[item[0]] >= item[1]:
-                        self.summon_add(agent)
-            '''
+        # check if new summons are available
+        '''
+        for creature in self.roster.values():
+            for item in creature.requirements.items():
+                if self.requirements[item[0]] >= item[1]:
+                    self.summon_add(agent)
+        '''
 
-            for action in self.actions.values():
-                if action.check_reqs():
-                    self.valid_actions.append(action.ID)
+        # Check for action reqs; assemble valid_actions list
+        for action in self.actions.values():
+            if action.check_reqs():
+                self.valid_actions.append(action.ID)
 
-            # assemble turn menu from valid_actions
-            game_states.BattleScreen.make_turn_menu(self.valid_actions)
-            self.turn_state = 'update'
-        elif self.turn_state == 'update':
-            if action is not None:
-                self.actions[action].run()
-            # update logic
-            # update turn menu
-            # set turn_state to 'finish'
-        elif self.turn_state == 'finish': pass
-            # Reset state
-            # Return 'finish'
-        else:
-            raise pygame.error('Invalid turn_state')
+        # assemble turn menu from valid_actions
+        game_states.BattleScreen.make_turn_menu(self.valid_actions) #TO DO: this is ugly
+
+    def take_turn(self):
+        if self.action is not None:
+            self.actions[self.action].run()
+        # update logic
+        # update turn menu
+        # set turn_state to 'finish'
         
 
 
@@ -147,10 +142,7 @@ class Player(creatures.Creature):
             num = 0
 
         #id = list(roster.keys())[num]
-        #return id
-
-    #def move(self): pass
-        
+        #return id        
 
 
 player1 = Player()

@@ -309,6 +309,10 @@ class BattleScreen(GameState):
             # Check for clicks------------------------------------------------
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
+
+                click_handled = False
+
+                #for listener in cls.listeners
                 
                 #Check if game agent is clicked
                 for agent in cls.agents.values():
@@ -316,14 +320,14 @@ class BattleScreen(GameState):
                         cls.selected_agent = agent
                         cls.tile_selected_pos = iso_to_cart(cls.selected_agent.iso_pos, with_offset=1)
                         if cls.selected_agent == cls.active_agent:
-                            cls.turn_menu.show = True
                             cls.turn_menu.is_active = True
+                            # Should we re-init the turn here
+                            click_handled = True
                         else:
-                            cls.turn_menu.show = False
+                            cls.active_agent.reset_turn()
                             cls.turn_menu.is_active = False
-                            cls.turn_action = None
-                            cls.active_agent.turn_state = 'init'
                             #Show agent notecard
+                            click_handled = True
                         break
                 
                 #Check if BattleScreen button is clicked
@@ -336,13 +340,19 @@ class BattleScreen(GameState):
                 '''
 
                 #Check if turn_menu button is clicked
-                if cls.turn_menu.is_active:
-                    for button in cls.turn_menu.buttons.values():
-                        if button.rect.collidepoint(pos):
-                            if button.id == 'move':
-                                cls.turn_action = button.id
+                if not click_handled:
+                    if cls.turn_menu.is_active:
+                        for button in cls.turn_menu.buttons.values():
+                            if button.rect.collidepoint(pos):
+                                cls.active_agent.start_action(button.id)
                                 cls.turn_menu.is_active = False
+                                click_handled = True
                                 break
+
+                # Check for Action clicks
+                if not click_handled:
+                    if cls.active_agent.action is not None:
+                        click_handled = cls.active_agent.actions[cls.active_agent.action].check_click(pos)
 
 
         #UPDATE ENTITIES---------------------------------------------------------------------
@@ -362,7 +372,7 @@ class BattleScreen(GameState):
         cls.tile_selected_pos = (x, y)
 
         # Update turn_menu
-        if cls.turn_menu.is_active:
+        if cls.turn_menu.is_active: # active when selected == active
             cls.turn_menu.update()
 
         # Update agents
@@ -376,12 +386,15 @@ class BattleScreen(GameState):
             agent.run_state()
 
         # Update the active agent
-        cls.active_agent.take_turn(cls.turn_action)
+        cls.active_agent.take_turn()# were passing cls.turn_action
 
         # If neccessary, get the next turn, center cam on agent
         if cls.active_agent is None: 
             agent = cls.turn_order.pop(0)
             cls.active_agent = player.player1.roster[agent]
+            cls.active_agent.init_turn() 
+            cls.selected_agent = cls.active_agent
+            cls.turn_menu.is_active = True
             cls.turn_order.append(cls.calc_turn_order(1))
 
 
@@ -398,15 +411,19 @@ class BattleScreen(GameState):
 
         # TO DO: Move this to the actions.Move.draw()
         # draw valid move tiles for active agent
+        # draw() call for Actions
+        cls.active_agent.draw_action(game_win)
+        '''
         if cls.turn_action is not None:
             cls.active_agent.actions[cls.turn_action].draw(game_win)
+        '''
         #for t in cls.active_agent.valid_moves:
         #    game_win.blit(actions.Move.tile, (t[0] + camera.offset_x, t[1] + camera.offset_y))
 
         for agent in cls.agents.values():
             agent.draw(game_win)
 
-        if cls.turn_menu.show:
+        if cls.turn_menu.is_active:
             cls.turn_menu.draw(game_win)
 
     @classmethod
@@ -418,6 +435,10 @@ class BattleScreen(GameState):
         # Initializes turn_order list with two players
         # Sets active_agent to the first agent in turn_order list
         # Instantiates the Turn_Menu
+
+        # Instantiate the turn menu
+        cls.turn_menu = TurnMenu()
+        #cls.turn_menu.add_buttons('move')
 
         # Create the two players
         # set the player's positions to the starting positions
@@ -442,7 +463,7 @@ class BattleScreen(GameState):
                                            (agent.width,
                                            agent.height))
 
-
+        # Set starting positions of players creatures
         '''
         i = 0
         for creature in player.player1.roster.values():
@@ -461,16 +482,16 @@ class BattleScreen(GameState):
 
         # Set the active_agent, selected_agent and selected_tile. 
         # Append the next turn to the list
+        # TO DO: Maybe wrap this in a set_active_agent() method
         agent = cls.turn_order.pop(0)
         cls.active_agent = cls.agents[agent]
+        cls.active_agent.turn_init()
         cls.turn_order.append(cls.calc_turn_order(1))
         cls.selected_agent = cls.active_agent
+        cls.turn_menu.is_active = True
         cls.tile_selected_pos = iso_to_cart(cls.selected_agent.iso_pos, with_offset=1)
 
-        # Set the turn menu for the active agent
-        cls.turn_menu = TurnMenu()
-        cls.turn_menu.is_active = True
-        #cls.turn_menu.add_buttons('move')
+        
 
         #cls.active_agent.on_event('move')
         #cls.active_agent.take_turn()
@@ -529,7 +550,6 @@ class TurnMenu:
     button_height = button_blank.get_height()
     pos = (100, 370)
     buttons = {}
-    show = False #Only rendered when True
     is_active = False
 
     def __init__(self): pass        
@@ -541,8 +561,8 @@ class TurnMenu:
         for item in items:
             cls.buttons[item] = Button(item, 
                                        cls.button_blank, 
-                                       (cls.pos[0], cls.pos[1] + (i * cls.button_height)),
-                                       item)
+                                       pos=(cls.pos[0], cls.pos[1] + (i * cls.button_height)),
+                                       text=item)
             i += 1
 
         cls.show = True

@@ -5,10 +5,12 @@ Returns:
     [type] -- [description]
 """
 import abc
+import ast # used to convert string of a tuple to a tuple object
 import os
 
 import pygame
 
+import buttons
 import camera
 import constants
 from functions import iso_to_cart
@@ -17,6 +19,7 @@ from functions import iso_to_cart
 class Action:
     def __init__(self, owner):
         self._owner = owner
+        self.is_drawing = False
 
     @abc.abstractmethod
     def check_reqs(self):
@@ -28,10 +31,28 @@ class Action:
         pass
 
     @abc.abstractmethod
+    def start(self):
+        """Performs setup work for the action
+        """
+        pass
+
+    @abc.abstractmethod
     def run(self): pass
 
     @abc.abstractmethod
+    def end(self): pass
+
+    @abc.abstractmethod
     def draw(self, game_win): pass
+
+    @abc.abstractmethod
+    def check_click(self, mouse_pos): pass
+
+    @abc.abstractmethod
+    def reset(self):
+        """Sets the Action instance attributes to initial state
+        """
+        pass
 
 
 class Move(Action):
@@ -41,13 +62,83 @@ class Move(Action):
 
     def __init__(self, owner):
         super().__init__(owner)
-        self.moved = False #Set True after agent moves
+        self.valid_moves = None     #List of tiles the agent can move to
+        self.selected_tile = None   #Tile the agent needs to move to
+        self.moved = False          #Set True after agent moves
+        self.tile_buttons = None    #List of buttons for all tiles in valid_moves
+        self.is_drawing = False
+        self.first_pos = (0, 0)     #Move along the isometric x row
+        self.distance1 = 0
+        self.distance2 = 0
+        self.second_pos = (0, 0)    #Move along the isometric y column
+        self.slope = 0
 
     def check_reqs(self):
         return not self.moved
 
-    def run(self):
+    def start(self):
         self._get_move_tiles()
+        self.is_drawing = True
+
+    def run(self):
+        """
+            set agents velocity vector towards the clicked tiles x column 
+            move there
+            set agents velocity vector toward the clicked tiles y column 
+            move there
+            call self.end()
+        """
+        direction = 1 
+        if self.selected_tile is not None:
+            if self.first_pos is not None:
+                # calculate which direction to use
+                if self._owner.iso_pos[0] > self.first_pos[0]:
+                    direction = -direction # use negative slope
+                new_pos = (self._owner.pos[0] + ((constants.SLOPE_MOVE[0] * constants.MOVE_SPEED) * direction),
+                           self._owner.pos[1] - ((constants.SLOPE_MOVE[1] * constants.MOVE_SPEED) * direction))
+                self.distance1 -= abs(self._owner.pos[0] - new_pos[0])
+                self._owner.pos = new_pos
+                if self.distance1 <= 0: #we moved to the first position
+                    self.first_pos = None
+                    distance1 = 0
+            else: 
+                if self._owner.pos[1] < self.selected_tile[1]:
+                    direction = -direction
+                new_pos = (self._owner.pos[0] - ((constants.SLOPE_MOVE[0] * constants.MOVE_SPEED) * direction),
+                           self._owner.pos[1] - ((constants.SLOPE_MOVE[1] * constants.MOVE_SPEED) * direction))
+                self.distance2 -= abs(self._owner.pos[0] - new_pos[0])
+                self._owner.pos = new_pos
+                if self.distance2 <= 0: #we moved to the first position
+                    self.selected_tile = None
+                    distance2 = 0
+
+    def end(self): pass       
+
+    def draw(self, game_win):
+        if self.is_drawing:
+            for tile in self.valid_moves:
+                game_win.blit(self.tile_img, (tile[0] + camera.offset_x, tile[1] + camera.offset_y))
+
+    def check_click(self, mouse_pos):
+        for button in self.tile_buttons:
+            if button.rect.collidepoint(mouse_pos):
+                self.selected_tile = button.pos
+                tup = ast.literal_eval(button.id)
+                self.first_pos = (tup[0], self._owner.iso_pos[1])
+                self.distance1 = abs(self._owner.iso_pos[0] - self.first_pos[0]) * constants.TILE_W_HALF
+                self.distance2 = abs(self._owner.iso_pos[0] - tup[0]) * constants.TILE_W_HALF
+                #self.second_pos =  
+                self.reset()
+                return True
+                break
+        return False
+
+    def reset(self):
+        self.valid_moves = None     
+        #self.selected_tile = None   
+        self.moved = False          
+        self.tile_buttons = None
+        self.is_drawing = False
 
 
     def _get_move_tiles(self):
@@ -55,18 +146,20 @@ class Move(Action):
            to the owners valid_moves list
         """
         # TO DO: check if tiles can be moved to
+        self.valid_moves = []
         tiles = []
-        
-        # Assemble list of all valid tiles the agent can move to.
-        # Outer loop starts with the most negative valid x pos.
-        # Inner loop starts with the most negative valid y pos for given x
-        # e.g. With a move_amount of 2 from pos(0, 0), the append 
-        #           order will be:
-        #           (-2, 0)
-        #           (-1, -1), (-1, 0), (-1, 1)
-        #           (0, -2), (0, -1), (0, 0), (0, 1), (0, 2)
-        #           (1, -1), (1, 0), (1, 1) 
-        #           (2, 0)
+        '''
+         Assemble list of all valid tiles the agent can move to.
+         Outer loop starts with the most negative valid x pos.
+         Inner loop starts with the most negative valid y pos for given x
+         e.g. With a move_amount of 2 from pos(0, 0), the append 
+                   order will be:
+                   (-2, 0)
+                   (-1, -1), (-1, 0), (-1, 1)
+                   (0, -2), (0, -1), (0, 0), (0, 1), (0, 2)
+                   (1, -1), (1, 0), (1, 1) 
+                   (2, 0)
+        '''
         x = -(self._owner.move_amount)
         y = -(self._owner.move_amount - abs(x))
         while x <= self._owner.move_amount:
@@ -76,20 +169,25 @@ class Move(Action):
             x += 1
             y = -(self._owner.move_amount - abs(x))
 
-        tiles_cart = []
         for tile in tiles:
-            tiles_cart.append(iso_to_cart(tile))
+            self.valid_moves.append(iso_to_cart(tile))
 
-        self._owner.valid_moves = tiles_cart
+        self.make_move_buttons(tiles)
 
-        # draw move_tile on all valid tiles
-        # check for click on valid tiles
-        # set agents velocity vector towards the clicked tiles
-        #       x column and move there
-        # set agents velocity vector toward the clicked tiles
-        #       y column and move there
+    def make_move_buttons(self, tiles):
+        """Makes a list of buttons.Button objects from 'tiles' that can be
+        clicked on
+        
+        Arguments:
+            tiles {list(int, int)} -- self.valid_moves
+        """
+        self.tile_buttons = []
+        i = 0
+        for tile in self.valid_moves:
+            cart = iso_to_cart(tile)
+            self.tile_buttons.append(buttons.Button(str(tiles[i]),
+                                                    width=constants.TILE_WIDTH,
+                                                    height=constants.TILE_HEIGHT,
+                                                    pos=(tile[0] + camera.offset_x, tile[1] + camera.offset_y)))
+            i += 1
 
-    def draw(self, game_win):
-        #if self.is_waiting_
-        for tile in self._owner.valid_moves:
-            game_win.blit(self.tile_img, (tile[0] + camera.offset_x, tile[1] + camera.offset_y))

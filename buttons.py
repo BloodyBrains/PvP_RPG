@@ -6,13 +6,37 @@ import camera
 
 
 class Button():
-    def __init__(self, id, sprite, pos=(0, 0), text=None):
+    def __init__(self, id, sprite=None, width=0, height=0, pos=(0, 0), text=None):
+        """Defines a clickable button.
+            With no sprite, width and height are used to determine the rect.
+            If sprite is used without width and height, the sprite's
+                width and height determine the rect
+        
+        Arguments:
+            id {str} -- name of button
+        
+        Keyword Arguments:
+            sprite {pygame.Surface} -- button image (default: {None})
+            width {int} -- button width (default: {0})
+            height {int} -- button height (default: {0})
+            pos {tuple} -- upper left of button (default: {(0, 0)})
+            text {str} -- text to display on button (default: {None})
+        """
         self.id = id
         self.pos = pos
         self.sprite = sprite
         self.is_pressed = False
-        self.rect = pygame.Rect((self.pos), 
-                               (self.sprite.get_width(), self.sprite.get_height()))
+        if sprite == None:
+            self.rect = pygame.Rect((self.pos),
+                                    (width, height))
+        else:
+            if (width == 0) and (height == 0):
+                self.rect = pygame.Rect((self.pos), 
+                                        (self.sprite.get_width(), self.sprite.get_height()))
+            else:
+                self.rect = pygame.Rect((self.pos), 
+                                        (width, height))
+
         self.text = text
 
     def update(self):

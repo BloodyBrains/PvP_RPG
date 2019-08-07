@@ -14,3 +14,5 @@ CREATURE_H = 80
 CAM_SPEED = 3
 CAM_STARTX = -672
 CAM_STARTY = 96
+MOVE_SPEED = 3
+SLOPE_MOVE = (2, 1) # slope for moving along an isometric row/column
