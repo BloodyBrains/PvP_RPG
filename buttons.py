@@ -62,7 +62,7 @@ class ButtonTile(Button):
     """Extends the Button class to include a polygon that represents the
        isometric tile
     """
-    def __init__(self, id, sprite=None, width=0, height=0, pos=(0, 0), text=None, polygon=None):
+    def __init__(self, id, sprite=None, width=0, height=0, pos=(0, 0), iso_pos=(0, 0), text=None, polygon=None):
         """[summary]
         
             Arguments:
@@ -72,6 +72,7 @@ class ButtonTile(Button):
                 polygon {list[tuple(int, int)]} -- list of points that define the polygon (default: {None})
         """
         super().__init__(id, sprite, width, height, pos, text)
+        self.iso_pos = iso_pos
         self.poly = polygon
 
     def check_click(self, mouse_pos):

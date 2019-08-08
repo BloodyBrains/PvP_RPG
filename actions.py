@@ -5,7 +5,6 @@ Returns:
     [type] -- [description]
 """
 import abc
-import ast # used to convert string of a tuple to a tuple object
 import os
 
 import pygame
@@ -99,13 +98,14 @@ class Move(Action):
                 self.distance1 -= abs(self._owner.pos[0] - new_pos[0])
                 self._owner.pos = new_pos
                 if self.distance1 <= 0: #we moved to the first position
+                    self._owner.iso_pos = self.first_pos
                     self.first_pos = None
                     distance1 = 0
             else: 
-                if self._owner.pos[1] < self.selected_tile[1]:
+                if self._owner.iso_pos[1] > self.selected_tile[1]:
                     direction = -direction
-                new_pos = (self._owner.pos[0] - ((constants.SLOPE_MOVE[0] * constants.MOVE_SPEED) * direction),
-                           self._owner.pos[1] - ((constants.SLOPE_MOVE[1] * constants.MOVE_SPEED) * direction))
+                new_pos = (self._owner.pos[0] + ((constants.SLOPE_MOVE[0] * constants.MOVE_SPEED) * direction),
+                           self._owner.pos[1] + ((constants.SLOPE_MOVE[1] * constants.MOVE_SPEED) * direction))
                 self.distance2 -= abs(self._owner.pos[0] - new_pos[0])
                 self._owner.pos = new_pos
                 if self.distance2 <= 0: #we moved to the first position
@@ -121,17 +121,15 @@ class Move(Action):
 
     def check_click(self, mouse_pos):
         for button in self.tile_buttons:
-            if button.rect.collidepoint(mouse_pos):
-                if button.check_click(mouse_pos):
-                    self.selected_tile = button.pos
-                    tup = ast.literal_eval(button.id)
-                    self.first_pos = (tup[0], self._owner.iso_pos[1])
-                    self.distance1 = abs(self._owner.iso_pos[0] - self.first_pos[0]) * constants.TILE_W_HALF
-                    self.distance2 = abs(self._owner.iso_pos[0] - tup[0]) * constants.TILE_W_HALF
-                    print(tup)  
-                    self.reset()
-                    return True
-                    break
+            if button.check_click(mouse_pos):
+                self.selected_tile = button.iso_pos
+                self.first_pos = (button.iso_pos[0], self._owner.iso_pos[1])
+                self.distance1 = abs(self._owner.iso_pos[0] - self.first_pos[0]) * constants.TILE_W_HALF
+                self.distance2 = abs(self.first_pos[1] - self.selected_tile[1]) * constants.TILE_W_HALF
+                print(button.iso_pos)  
+                self.reset()
+                return True
+                break
         return False
 
     def reset(self):
@@ -195,6 +193,7 @@ class Move(Action):
                                                     width=constants.TILE_WIDTH,
                                                     height=constants.TILE_HEIGHT,
                                                     pos=(tile[0], tile[1]),
+                                                    iso_pos=tiles[i],
                                                     polygon=poly))
             i += 1
 
