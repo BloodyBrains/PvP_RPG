@@ -64,8 +64,7 @@ class Move(Action):
         self.valid_moves = None     #List of tiles the agent can move to (cartesian)
         self.selected_tile = None   #Tile the agent needs to move to
         self.has_moved = False          #Set True after agent moves
-        self.tile_buttons = None    #List of buttons for all tiles in valid_moves
-        self.is_drawing = False
+        self.tile_buttons = []    #List of buttons for all tiles in valid_moves
         self.first_pos = (0, 0)     #Move along the isometric x row
         self.distance1 = 0
         self.distance2 = 0
@@ -77,16 +76,13 @@ class Move(Action):
 
     def start(self):
         self._get_move_tiles()
-        self.is_drawing = True
 
     def run(self):
+        """ Moves the agent to the selected tile in two moves (if neccessary)
+            First, moves the column position, then to the row position.
+            Call self.end()
         """
-            set agents velocity vector towards the clicked tiles x column 
-            move there
-            set agents velocity vector toward the clicked tiles y column 
-            move there
-            call self.end()
-        """
+
         direction = 1 
         if self.selected_tile is not None:
             if self.first_pos is not None:
@@ -115,11 +111,21 @@ class Move(Action):
     def end(self): pass       
 
     def draw(self, game_win):
-        if self.is_drawing:
-            for tile in self.valid_moves:
-                game_win.blit(self.tile_img, (tile[0], tile[1]))
+        for but in self.tile_buttons:
+            but.draw(game_win)
 
     def check_click(self, mouse_pos):
+        """ Checks if a tile has been clicked on to move to.
+            If so, it calculates the iso pos of the first move and the
+            x distance to get there.
+            Calls reset()
+            Arguments:
+                mouse_pos {tuple(int)} -- mouse position
+            
+            Returns:
+                bool -- True if a valid tile is clicked
+        """
+
         for button in self.tile_buttons:
             if button.check_click(mouse_pos):
                 self.selected_tile = button.iso_pos
@@ -129,15 +135,12 @@ class Move(Action):
                 print(button.iso_pos)  
                 self.reset()
                 return True
-                break
         return False
+        #TO DO: Break this into separate methods
 
     def reset(self):
-        self.valid_moves = None     
-        #self.selected_tile = None   
-        self.has_moved = False          
-        self.tile_buttons = None
-        self.is_drawing = False
+        self.valid_moves = []    
+        self.tile_buttons = []
 
 
     def _get_move_tiles(self):
@@ -183,6 +186,7 @@ class Move(Action):
         self.tile_buttons = []
         i = 0
         for tile in self.valid_moves:
+            # Assemble the polygon that represents the clickable area of the tile
             p1 = (tile[0], tile[1] + constants.TILE_H_HALF)
             p2 = (tile[0] + constants.TILE_W_HALF, tile[1])
             p3 = (tile[0] + constants.TILE_WIDTH, tile[1] + constants.TILE_W_HALF)
@@ -190,8 +194,7 @@ class Move(Action):
             poly = [p1, p2, p3, p4]
 
             self.tile_buttons.append(buttons.ButtonTile(str(tiles[i]),
-                                                    width=constants.TILE_WIDTH,
-                                                    height=constants.TILE_HEIGHT,
+                                                    sprite=self.tile_img,
                                                     pos=(tile[0], tile[1]),
                                                     iso_pos=tiles[i],
                                                     polygon=poly))

@@ -1,8 +1,8 @@
 # buttons.py
-
 import pygame
 
 import camera
+import constants
 
 
 class Button():
@@ -45,6 +45,9 @@ class Button():
         new_y = self.pos[1] + camera.offset_y
         self.pos = (new_x, new_y)
 
+    def draw(self, win):
+        win.blit(self.sprite, self.pos)
+
     def set_text(self, text):
         self.text = text
 
@@ -62,6 +65,7 @@ class ButtonTile(Button):
     """Extends the Button class to include a polygon that represents the
        isometric tile
     """
+    
     def __init__(self, id, sprite=None, width=0, height=0, pos=(0, 0), iso_pos=(0, 0), text=None, polygon=None):
         """[summary]
         
@@ -74,6 +78,7 @@ class ButtonTile(Button):
         super().__init__(id, sprite, width, height, pos, text)
         self.iso_pos = iso_pos
         self.poly = polygon
+        self.sprite = sprite
 
     def check_click(self, mouse_pos):
         """Returns if the polygon contains the mouse_pos or not
