@@ -56,3 +56,47 @@ class Button():
 
     def __str__(self):
         return self.id
+
+
+class ButtonTile(Button):
+    """Extends the Button class to include a polygon that represents the
+       isometric tile
+    """
+    def __init__(self, id, sprite=None, width=0, height=0, pos=(0, 0), text=None, polygon=None):
+        """[summary]
+        
+            Arguments:
+                Button {class} -- clickable button
+            
+            Keyword Arguments:
+                polygon {list[tuple(int, int)]} -- list of points that define the polygon (default: {None})
+        """
+        super().__init__(id, sprite, width, height, pos, text)
+        self.poly = polygon
+
+    def check_click(self, mouse_pos):
+        """Returns if the polygon contains the mouse_pos or not
+        
+            Arguments:
+                mouse_pos {tuple(int, int)} -- mouse position
+            
+            Returns:
+                bool -- True if polygon contains mouse_pos
+        """
+        n = len(self.poly)
+        x = mouse_pos[0]
+        y = mouse_pos[1]
+        inside =False
+
+        p1x,p1y = self.poly[0]
+        for i in range(n+1):
+            p2x,p2y = self.poly[i % n]
+            if y > min(p1y,p2y):
+                if y <= max(p1y,p2y):
+                    if x <= max(p1x,p2x):
+                        if p1y != p2y:
+                            xinters = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
+                        if p1x == p2x or x <= xinters:
+                            inside = not inside
+            p1x,p1y = p2x,p2y
+        return inside

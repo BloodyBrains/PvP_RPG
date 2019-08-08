@@ -32,10 +32,4 @@ def iso_to_cart(iso_pos, width=0, height=0, with_offset=0):
         cart_x += (constants.TILE_W_HALF - (width / 2))
         cart_y += (constants.TILE_H_HALF - height)
 
-    '''
-    # if we need the camera offset
-    if not(with_offset) == False:
-        cart_x = cart_x + cls.cam_offset_x + iso_grid.IsoGrid.start_x
-        cart_y = cart_y + cls.cam_offset_y + iso_grid.IsoGrid.start_y    '''
-
     return (cart_x, cart_y)

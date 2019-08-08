@@ -62,9 +62,9 @@ class Move(Action):
 
     def __init__(self, owner):
         super().__init__(owner)
-        self.valid_moves = None     #List of tiles the agent can move to
+        self.valid_moves = None     #List of tiles the agent can move to (cartesian)
         self.selected_tile = None   #Tile the agent needs to move to
-        self.moved = False          #Set True after agent moves
+        self.has_moved = False          #Set True after agent moves
         self.tile_buttons = None    #List of buttons for all tiles in valid_moves
         self.is_drawing = False
         self.first_pos = (0, 0)     #Move along the isometric x row
@@ -74,7 +74,7 @@ class Move(Action):
         self.slope = 0
 
     def check_reqs(self):
-        return not self.moved
+        return not self.has_moved
 
     def start(self):
         self._get_move_tiles()
@@ -117,26 +117,27 @@ class Move(Action):
     def draw(self, game_win):
         if self.is_drawing:
             for tile in self.valid_moves:
-                game_win.blit(self.tile_img, (tile[0] + camera.offset_x, tile[1] + camera.offset_y))
+                game_win.blit(self.tile_img, (tile[0], tile[1]))
 
     def check_click(self, mouse_pos):
         for button in self.tile_buttons:
             if button.rect.collidepoint(mouse_pos):
-                self.selected_tile = button.pos
-                tup = ast.literal_eval(button.id)
-                self.first_pos = (tup[0], self._owner.iso_pos[1])
-                self.distance1 = abs(self._owner.iso_pos[0] - self.first_pos[0]) * constants.TILE_W_HALF
-                self.distance2 = abs(self._owner.iso_pos[0] - tup[0]) * constants.TILE_W_HALF
-                #self.second_pos =  
-                self.reset()
-                return True
-                break
+                if button.check_click(mouse_pos):
+                    self.selected_tile = button.pos
+                    tup = ast.literal_eval(button.id)
+                    self.first_pos = (tup[0], self._owner.iso_pos[1])
+                    self.distance1 = abs(self._owner.iso_pos[0] - self.first_pos[0]) * constants.TILE_W_HALF
+                    self.distance2 = abs(self._owner.iso_pos[0] - tup[0]) * constants.TILE_W_HALF
+                    print(tup)  
+                    self.reset()
+                    return True
+                    break
         return False
 
     def reset(self):
         self.valid_moves = None     
         #self.selected_tile = None   
-        self.moved = False          
+        self.has_moved = False          
         self.tile_buttons = None
         self.is_drawing = False
 
@@ -147,7 +148,7 @@ class Move(Action):
         """
         # TO DO: check if tiles can be moved to
         self.valid_moves = []
-        tiles = []
+        iso_tiles = []
         '''
          Assemble list of all valid tiles the agent can move to.
          Outer loop starts with the most negative valid x pos.
@@ -164,30 +165,36 @@ class Move(Action):
         y = -(self._owner.move_amount - abs(x))
         while x <= self._owner.move_amount:
             while y <= (self._owner.move_amount - abs(x)):
-                tiles.append((self._owner.iso_pos[0] + x, self._owner.iso_pos[1] + y))
+                iso_tiles.append((self._owner.iso_pos[0] + x, self._owner.iso_pos[1] + y))
                 y += 1
             x += 1
             y = -(self._owner.move_amount - abs(x))
 
-        for tile in tiles:
-            self.valid_moves.append(iso_to_cart(tile))
+        for tile in iso_tiles:
+            self.valid_moves.append(iso_to_cart(tile, with_offset=1))
 
-        self.make_move_buttons(tiles)
+        self.make_move_buttons(iso_tiles) #Use the iso_tiles to make button ids
 
     def make_move_buttons(self, tiles):
         """Makes a list of buttons.Button objects from 'tiles' that can be
-        clicked on
-        
-        Arguments:
-            tiles {list(int, int)} -- self.valid_moves
+            clicked on
+            
+            Arguments:
+                tiles {list(int, int)} -- self.valid_moves
         """
         self.tile_buttons = []
         i = 0
         for tile in self.valid_moves:
-            cart = iso_to_cart(tile)
-            self.tile_buttons.append(buttons.Button(str(tiles[i]),
+            p1 = (tile[0], tile[1] + constants.TILE_H_HALF)
+            p2 = (tile[0] + constants.TILE_W_HALF, tile[1])
+            p3 = (tile[0] + constants.TILE_WIDTH, tile[1] + constants.TILE_W_HALF)
+            p4 = (tile[0] + constants.TILE_W_HALF, tile[1] + constants.TILE_HEIGHT)
+            poly = [p1, p2, p3, p4]
+
+            self.tile_buttons.append(buttons.ButtonTile(str(tiles[i]),
                                                     width=constants.TILE_WIDTH,
                                                     height=constants.TILE_HEIGHT,
-                                                    pos=(tile[0] + camera.offset_x, tile[1] + camera.offset_y)))
+                                                    pos=(tile[0], tile[1]),
+                                                    polygon=poly))
             i += 1
 
