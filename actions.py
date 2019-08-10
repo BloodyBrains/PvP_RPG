@@ -1,8 +1,6 @@
 # actions.py
 """Actions an agent can perform
 
-Returns:
-    [type] -- [description]
 """
 import abc
 import os
@@ -63,8 +61,8 @@ class Move(Action):
         super().__init__(owner)
         self.valid_moves = None     #List of tiles the agent can move to (cartesian)
         self.selected_tile = None   #Tile the agent needs to move to
-        self.has_moved = False          #Set True after agent moves
-        self.tile_buttons = []    #List of buttons for all tiles in valid_moves
+        self.has_moved = False      #Set True after agent moves
+        self.tile_buttons = []      #List of buttons for all tiles in valid_moves
         self.first_pos = (0, 0)     #Move along the isometric x row
         self.distance1 = 0
         self.distance2 = 0
@@ -104,11 +102,15 @@ class Move(Action):
                            self._owner.pos[1] + ((constants.SLOPE_MOVE[1] * constants.MOVE_SPEED) * direction))
                 self.distance2 -= abs(self._owner.pos[0] - new_pos[0])
                 self._owner.pos = new_pos
-                if self.distance2 <= 0: #we moved to the first position
+                if self.distance2 <= 0: #we moved to the final position
+                    self._owner.iso_pos = self.selected_tile
+                    self._owner.pos = iso_to_cart(self._owner.iso_pos, self._owner.width, self._owner.height, with_offset=1)
                     self.selected_tile = None
+                    self.end()
                     distance2 = 0
 
-    def end(self): pass       
+    def end(self):
+        self.has_moved = True       
 
     def draw(self, game_win):
         for but in self.tile_buttons:

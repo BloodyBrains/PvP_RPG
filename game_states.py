@@ -48,9 +48,9 @@ class StartScreen(GameState):
 
     @classmethod
     def __init__(cls):
-        cls.buttons['play'].pos = [((constants.screen_width / 2) 
+        cls.buttons['play'].pos = [((constants.SCREEN_WIDTH / 2) 
                                      - (cls.buttons['play'].sprite.get_width() / 2)),
-                                    (constants.screen_height / 2)]
+                                    (constants.SCREEN_HEIGHT / 2)]
         cls.buttons['play'].rect = pygame.Rect(cls.buttons['play'].pos,
                                                (cls.buttons['play'].rect.width,
                                                 cls.buttons['play'].rect.height))
@@ -72,8 +72,8 @@ class StartScreen(GameState):
                 pos = pygame.mouse.get_pos()
                 for button in cls.buttons.values():
                     if button.rect.collidepoint(pos):
-                        print(button.id)
-                        if button.id == 'play_button':
+                        print(button.ID)
+                        if button.ID == 'play_button':
                             #cls.switch_to_states.append('roster_edit')
                             return 'roster_edit'
                     else:
@@ -105,9 +105,9 @@ class RosterEdit(GameState):
     roster_buttons = [] # list creature buttons in roster rect
 
     # roster_rect is the border that surrounds the creature selection area
-    roster_rect_x = math.floor(constants.screen_width * 0.1)
+    roster_rect_x = math.floor(constants.SCREEN_WIDTH * 0.1)
     roster_rect_y = 50
-    roster_rect_width = math.floor(constants.screen_width * 0.8)
+    roster_rect_width = math.floor(constants.SCREEN_WIDTH * 0.8)
     roster_rect_height = 222
     roster_rect = pygame.Rect((roster_rect_x,
                                roster_rect_y),
@@ -115,8 +115,8 @@ class RosterEdit(GameState):
                                roster_rect_height))
 
     # rect for area where selected creature is drawn
-    selected_rect = pygame.Rect(math.floor(constants.screen_width * 0.7),
-                                math.floor(constants.screen_height * 0.7),
+    selected_rect = pygame.Rect(math.floor(constants.SCREEN_WIDTH * 0.7),
+                                math.floor(constants.SCREEN_HEIGHT * 0.7),
                                 constants.CREATURE_W,
                                 constants.CREATURE_H)
 
@@ -136,10 +136,10 @@ class RosterEdit(GameState):
                                          / (constants.CREATURE_W + cls.offset))
 
         cls.buttons['play'].pos = (
-                (0, constants.screen_height - cls.buttons['play'].rect.height))
+                (0, constants.SCREEN_HEIGHT - cls.buttons['play'].rect.height))
         
         cls.buttons['play'].rect = pygame.Rect(
-                (0, constants.screen_height - cls.buttons['play'].rect.height),
+                (0, constants.SCREEN_HEIGHT - cls.buttons['play'].rect.height),
                 (cls.buttons['play'].rect.width, cls.buttons['play'].rect.height))
 
     
@@ -199,7 +199,7 @@ class RosterEdit(GameState):
                 pos = pygame.mouse.get_pos()
                 for button in cls.roster_buttons:
                     if button.rect.collidepoint(pos): 
-                        cls.selected = button.id
+                        cls.selected = button.ID
                         print(cls.selected)
                         break
                     else:
@@ -207,8 +207,8 @@ class RosterEdit(GameState):
 
                 for button in cls.buttons.values():
                     if button.rect.collidepoint(pos):
-                        print(button.id)
-                        if button.id == 'play_button':
+                        print(button.ID)
+                        if button.ID == 'play_button':
                             return 'battle_screen'
 
     @classmethod
@@ -344,7 +344,7 @@ class BattleScreen(GameState):
                     if cls.turn_menu.is_active:
                         for button in cls.turn_menu.buttons.values():
                             if button.rect.collidepoint(pos):
-                                cls.active_agent.start_action(button.id)
+                                cls.active_agent.start_action(button.ID)
                                 cls.turn_menu.is_active = False
                                 click_handled = True
                                 break
@@ -394,6 +394,7 @@ class BattleScreen(GameState):
             cls.active_agent = player.player1.roster[agent]
             cls.active_agent.init_turn() 
             cls.selected_agent = cls.active_agent
+            cls.tile_selected_pos = iso_to_cart(cls.selected_agent.iso_grid, with_offset=1)
             cls.turn_menu.is_active = True
             cls.turn_order.append(cls.calc_turn_order(1))
 
@@ -422,6 +423,7 @@ class BattleScreen(GameState):
 
         for agent in cls.agents.values():
             agent.draw(game_win)
+            pygame.draw.rect(game_win, (255, 0, 0), agent.rect, 1)
 
         if cls.turn_menu.is_active:
             cls.turn_menu.draw(game_win)
@@ -582,7 +584,7 @@ class TurnMenu:
     @classmethod
     def draw(cls, game_win):
         for button in cls.buttons.values():
-            text = cls.font.render(button.id, False, (0, 0, 0))
+            text = cls.font.render(button.ID, False, (0, 0, 0))
             game_win.blit(cls.button_blank, button.pos)
             game_win.blit(text, (button.pos[0] + 10, button.pos[1] + 5))
 

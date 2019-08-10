@@ -1,8 +1,6 @@
 # creature_states.py
 import abc
 
-# state ////////////////////////////////////////
-
 class State:
     @abc.abstractmethod
     def on_event(self, event):
@@ -57,8 +55,6 @@ class IdleState(State):
 
         if event == 'move':
             return 'move'
-
-        #return self.__str__()
 
     
 class AttackState(State):

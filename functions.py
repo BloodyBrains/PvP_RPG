@@ -33,3 +33,7 @@ def iso_to_cart(iso_pos, width=0, height=0, with_offset=0):
         cart_y += (constants.TILE_H_HALF - height)
 
     return (cart_x, cart_y)
+
+def Draw_Text(text, x, y, surface):
+    label = font.render(text, 1, (75,25,0))
+    surface.blit(label, (x, y))

@@ -5,7 +5,6 @@ import os
 
 import pygame
 
-#import actions
 import constants
 import creature_states
 import iso_grid

@@ -29,3 +29,18 @@ def get_images_from_sheet(file, width, height):
         i += 1
 
     return sprites
+
+
+def load_image(file):
+    "loads an image, prepares it for play"
+    try:
+        surface = pygame.image.load(os.path.join(constants.ASSETS, file)).convert()
+    except pygame.error:
+        raise SystemExit('Could not load image "%s" %s'%(file, pygame.get_error()))
+    return surface
+
+def load_images(*files):
+    imgs = []
+    for file in files:
+        imgs.append(load_image(file))
+    return imgs
