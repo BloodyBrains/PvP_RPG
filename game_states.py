@@ -38,16 +38,18 @@ class StartScreen(GameState):
         start screen is active
     """
 
-    bgr = pygame.image.load(os.path.join(constants.ASSETS, 'start_screen_bgr.png'))
+    bgr = None
     buttons = {}
-    buttons['play'] = Button('play_button', 
-                             pygame.image.load(os.path.join(constants.ASSETS, 'play_button.png')))
+    #buttons['play'] = Button('play_button', 
+    #                         pygame.image.load(os.path.join(constants.ASSETS, 'play_button.png')))
     visibles = []
     switch_to_states = []
 
 
     @classmethod
-    def __init__(cls):
+    def __init__(cls, images):
+        cls.bgr = images['bgr']
+        cls.buttons['play'] = Button('play_button', images['play'])
         cls.buttons['play'].pos = [((constants.SCREEN_WIDTH / 2) 
                                      - (cls.buttons['play'].sprite.get_width() / 2)),
                                     (constants.SCREEN_HEIGHT / 2)]
@@ -94,10 +96,12 @@ class StartScreen(GameState):
 class RosterEdit(GameState):
     '''Game State for "Creature Edit Screen"'''
 
-    bgr = pygame.image.load(os.path.join(constants.ASSETS, 'nebula_bgr.png'))
+    bgr = None #pygame.image.load(os.path.join(constants.ASSETS, 'nebula_bgr.png'))
     buttons = {}
-    buttons['play'] = Button('play_button',
-                             pygame.image.load(os.path.join(constants.ASSETS, 'play_button.png'))) 
+    player1 = None
+    player2 = None
+    #buttons['play'] = Button('play_button',
+    #                         pygame.image.load(os.path.join(constants.ASSETS, 'play_button.png'))) 
 
     offset = 10 # space between sprites in roster rect area
     total_positions = 0
@@ -125,9 +129,12 @@ class RosterEdit(GameState):
     selected = None # id of creature currently selected for edit
 
     @classmethod
-    def __init__(cls):
+    def __init__(cls, images, player1, player2):
+        cls.bgr = images['bgr']
         #cls.roster.update({'chaos':player.roster['chaos'].animations['idle'][1],
         #                   'air':player.roster['air'].animations['idle'][1]})
+        cls.player1 = player1
+        cls.player2 = player2
         cls.set_thumb_positions()
         cls.selected = 'chaos' #_HACK!!!-----------------------------------------
         #vis = [cls.roster[cls.selected], cls.selected_rect.topleft]
@@ -135,6 +142,7 @@ class RosterEdit(GameState):
         cls.total_positions = math.floor(cls.roster_rect_width
                                          / (constants.CREATURE_W + cls.offset))
 
+        cls.buttons['play'] = Button('play_button', images['play'])
         cls.buttons['play'].pos = (
                 (0, constants.SCREEN_HEIGHT - cls.buttons['play'].rect.height))
         
@@ -150,9 +158,9 @@ class RosterEdit(GameState):
         """Creates buttons for each creature in the player's roster
         """
         i = 0
-        for name in player.player1.roster_ids:
+        for name in cls.player1.roster_ids:
             cls.roster_buttons.append(Button(name,
-                                             player.player1.get_roster_thumbs(name),
+                                             cls.player1.get_roster_thumbs(name),
                                              pos=cls.thumb_positions[i],
                                              text=name))
             i += 1
@@ -226,7 +234,7 @@ class RosterEdit(GameState):
         cls.draw_roster_buttons(game_win)
 
         # draw selected creature <_HACK!!!!!!!!!!!!!>
-        game_win.blit(player.player1.roster[cls.selected].animations['idle'][0],
+        game_win.blit(cls.player1.roster[cls.selected].animations['idle'][0],
                       cls.selected_rect.topleft)
 
         #for i in cls.visibles:
@@ -234,8 +242,10 @@ class RosterEdit(GameState):
 
 
 class BattleScreen(GameState):
-    bgr = pygame.image.load(os.path.join(constants.ASSETS, 'nebula_bgr.png'))
-    tile_selected = pygame.image.load(os.path.join(constants.ASSETS, 'tile_selected.png'))
+    bgr = None #pygame.image.load(os.path.join(constants.ASSETS, 'nebula_bgr.png'))
+    player1 = None
+    player2 = None
+    tile_selected = None #pygame.image.load(os.path.join(constants.ASSETS, 'tile_selected.png'))
     tile_selected_pos = (0, 0)
 
     # action buttons for the active turn menu
@@ -260,8 +270,11 @@ class BattleScreen(GameState):
 
 
     @classmethod
-    def __init__(cls):
-        pass
+    def __init__(cls, images, player1, player2): 
+        cls.bgr = images['bgr']
+        cls.tile_selected = images['tile_selected']
+        cls.player1 = player1
+        cls.player2 = player2
 
     @classmethod
     def update(cls):
@@ -444,17 +457,17 @@ class BattleScreen(GameState):
 
         # Create the two players
         # set the player's positions to the starting positions
-        cls.agents['player1'] = player.player1
-        cls.agents['player2'] = player.player2
-        player.player1.iso_pos = cls.player_positions[0]
-        player.player1.pos = iso_to_cart(player.player1.iso_pos,
-                                     player.player1.width,
-                                     player.player1.height)
+        cls.agents['player1'] = cls.player1
+        cls.agents['player2'] = cls.player2
+        cls.player1.iso_pos = cls.player_positions[0]
+        cls.player1.pos = iso_to_cart(cls.player1.iso_pos,
+                                     cls.player1.width,
+                                     cls.player1.height)
 
-        player.player2.iso_pos = cls.player_positions[1]
-        player.player2.pos = iso_to_cart(player.player2.iso_pos,
-                                     player.player2.width,
-                                     player.player2.height)
+        cls.player2.iso_pos = cls.player_positions[1]
+        cls.player2.pos = iso_to_cart(cls.player2.iso_pos,
+                                     cls.player2.width,
+                                     cls.player2.height)
 
         # Update agents pos for camera offset
         for agent in cls.agents.values():

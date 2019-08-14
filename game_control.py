@@ -1,20 +1,26 @@
 # game_control.py
-
+import assets
 import game_states
 import player
 
 class Game():
     states = {}
     curr_state = None
-    player1 = None
-    player2 = None
+    #player1 = None
+    #player2 = None
 
     @staticmethod
     def init():
+        assets.load_assets()
+
+        # Init the player, they must be persistent throughout all game states
+        player1 = player.Player(sprite_sheet=assets.player_sprites['player'])
+        player2 = player.Player(sprite_sheet=assets.player_sprites['player'])
+
         Game.states.update(
-            {'start_screen':game_states.StartScreen(),
-             'roster_edit':game_states.RosterEdit(),
-             'battle_screen':game_states.BattleScreen()}
+            {'start_screen':game_states.StartScreen(assets.startstate_sprites),
+             'roster_edit':game_states.RosterEdit(assets.rosteredit_sprites, player1, player2),
+             'battle_screen':game_states.BattleScreen(assets.battlestate_sprites, player1, player2)}
         )
 
         try:

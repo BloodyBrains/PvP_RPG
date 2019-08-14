@@ -10,13 +10,12 @@ import pygame
 import constants
 
 
-def get_images_from_sheet(file, width, height):
+def get_images_from_sheet(sheet, width, height):
     """Takes a sprite sheet and returns a list of individual sprites.
     
     Arguments:
         file {[type]} -- [description]
     """
-    sheet = pygame.image.load(os.path.join(constants.ASSETS, file))
     sprites = []
     dest_rect = pygame.Rect((0, 0), (width, height))
     total = sheet.get_width() / width

@@ -18,7 +18,7 @@ SPEED = 4
 
 
 class Creature(abc.ABC, pygame.sprite.Sprite):
-    def __init__(self, pos=(0, 0)):
+    def __init__(self, pos=(0, 0), sprite_sheet=None):
         super().__init__()
         self.pos = pos
         self.iso_pos = None # tuple position with respect to the isometric
@@ -37,7 +37,20 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
         self.valid_actions = [] #list of action ids the agent can currently perform
         self.turn_state = 'init' # dictates the phase of the active agents turn
                                  #      init, update, finish
-        #self.requirements = {} # ['req' : quantity] 
+        #self.requirements = {} # ['req' : quantity]
+
+        #----------------------------------------------------------------------------------------------------
+        if sprite_sheet is None:
+            self.sprites = {}
+        else:
+            self.sprites = get_images_from_sheet(sprite_sheet, SPRITE_W, SPRITE_H)
+            self.animations = {}
+            self.animations['idle'] = [self.sprites[0], self.sprites[3]]
+            self.animations['attack'] = [self.sprites[1]]
+            self.animations['hurt'] = [self.sprites[3]]
+            self.animations['die'] = [self.sprites[2]]
+            self.animations['move'] = [self.sprites[0], self.sprites[3]] 
+
 
     def __str__(self):
         return self.name
@@ -82,6 +95,7 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
 
 
 class ChaosCreature(Creature):
+    '''
     sprites = get_images_from_sheet('chaos.png', SPRITE_W, SPRITE_H)
     animations = {}
     animations['idle'] = [sprites[0], sprites[3]]
@@ -89,6 +103,7 @@ class ChaosCreature(Creature):
     animations['hurt'] = [sprites[3]]
     animations['die'] = [sprites[2]]
     animations['move'] = [sprites[0], sprites[3]]
+    '''
     requirements = {}
     requirements['red'] = 1
 
@@ -97,23 +112,23 @@ class ChaosCreature(Creature):
     age = 0
 
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, pos=(0, 0), sprite_sheet=None):
+        super().__init__(pos, sprite_sheet)
         self.name = 'chaos'
-        self.width = ChaosCreature.animations['idle'][0].get_width()
-        self.height = ChaosCreature.animations['idle'][0].get_height()
+        self.width = self.animations['idle'][0].get_width()
+        self.height = self.animations['idle'][0].get_height()
         self.anim_speed = 8 #Num of game render cycles between animation frames
                             #   at 30 FPS
         self.states = {}
-        self.states['idle'] = creature_states.IdleState(ChaosCreature.animations['idle'],
+        self.states['idle'] = creature_states.IdleState(self.animations['idle'],
                                                         self.anim_speed)
-        self.states['attack'] = creature_states.IdleState(ChaosCreature.animations['attack'],
+        self.states['attack'] = creature_states.IdleState(self.animations['attack'],
                                                           self.anim_speed)
-        self.states['hurt'] = creature_states.IdleState(ChaosCreature.animations['hurt'],
+        self.states['hurt'] = creature_states.IdleState(self.animations['hurt'],
                                                         self.anim_speed)
-        self.states['die'] = creature_states.IdleState(ChaosCreature.animations['die'],
+        self.states['die'] = creature_states.IdleState(self.animations['die'],
                                                        self.anim_speed)
-        self.states['moving'] = creature_states.Moving(ChaosCreature.animations['move'],
+        self.states['moving'] = creature_states.Moving(self.animations['move'],
                                                         self.anim_speed)
         self.state = self.states['idle']
 
@@ -142,6 +157,7 @@ class ChaosCreature(Creature):
 
 
 class AirCreature(Creature):
+    '''
     sprites = get_images_from_sheet('air.png', SPRITE_W, SPRITE_H)
     animations = {}
     animations['idle'] = [sprites[0], sprites[3]]
@@ -149,28 +165,29 @@ class AirCreature(Creature):
     animations['hurt'] = [sprites[3]]
     animations['die'] = [sprites[2]]
     animations['move'] = [sprites[0], sprites[3]]
+    '''
     requirements = {}
     requirements['white'] = 1
 
     species = 'octo'
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, pos=(0, 0), sprite_sheet=None):
+        super().__init__(pos, sprite_sheet)
         self.name = 'air'
-        self.width = AirCreature.animations['idle'][0].get_width()
-        self.height = AirCreature.animations['idle'][0].get_height()
+        self.width = self.animations['idle'][0].get_width()
+        self.height = self.animations['idle'][0].get_height()
         self.anim_speed = 8 #Num of game render cycles between animation frames
                             #   at 30 FPS
         self.states = {}
-        self.states['idle'] = creature_states.IdleState(AirCreature.animations['idle'],
+        self.states['idle'] = creature_states.IdleState(self.animations['idle'],
                                                         self.anim_speed)
-        self.states['attack'] = creature_states.IdleState(AirCreature.animations['attack'],
+        self.states['attack'] = creature_states.IdleState(self.animations['attack'],
                                                           self.anim_speed)
-        self.states['hurt'] = creature_states.IdleState(AirCreature.animations['hurt'],
+        self.states['hurt'] = creature_states.IdleState(self.animations['hurt'],
                                                         self.anim_speed)
-        self.states['die'] = creature_states.IdleState(AirCreature.animations['die'],
+        self.states['die'] = creature_states.IdleState(self.animations['die'],
                                                        self.anim_speed)
-        self.states['move'] = creature_states.Moving(AirCreature.animations['move'],
+        self.states['move'] = creature_states.Moving(self.animations['move'],
                                                                 self.anim_speed)
         self.state = self.states['idle']
 
