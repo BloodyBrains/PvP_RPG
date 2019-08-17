@@ -47,6 +47,7 @@ import constants
 
 import creatures
 import creature_states
+import events
 import game_control
 import game_states
 import iso_grid
@@ -54,30 +55,22 @@ import player
 
 
 def main():
-    # SETUP ///////////////////////////////////////////////////////////////////    
-
-    game = game_control.Game
-    game.init()    
-
-    # GAME LOOP ///////////////////////////////////////////////////////////////
-    run = True
+    # SETUP /////////////////////////////////////////////////////////////////// 
     clock = pygame.time.Clock()
+    win = pygame.display.set_mode((constants.SCREEN_WIDTH, constants.SCREEN_HEIGHT))
 
-    while run:
-        clock.tick(30)
+    ev_mgr = events.EventManager()
+    game = game_control.Game(ev_mgr, clock, win)
 
-        game.update()
+    #game.init()    
 
-        game.curr_state.draw(win)
-
-        pygame.display.update()
+    game.run()    
 
     pygame.quit()
     quit()
 
 
 
-win = pygame.display.set_mode((constants.SCREEN_WIDTH, constants.SCREEN_HEIGHT))
 
 
 main()
