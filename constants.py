@@ -17,3 +17,20 @@ CAM_STARTY = 96
 MOVE_SPEED = 3
 SLOPE_MOVE = (2, 1) # kinda like a slope for moving along an 
                     #   isometric row/column
+
+# Event types
+EV_NONE = -1
+EV_ALL = 0
+EV_QUIT = 1
+EV_KEY_LEFT = 2
+EV_KEY_RIGHT = 3
+EV_KEY_UP = 4
+EV_KEY_DOWN = 5
+EV_KEY_LEFT_UP = 6
+EV_KEY_RIGHT_UP = 7
+EV_KEY_UP_UP = 8
+EV_KEY_DOWN_UP = 9
+EV_MOUSE_CLICK = 10
+EV_UPDATE = 11
+EV_AGENT_CLICKED = 12
+EV_CAM_MOVE = 13

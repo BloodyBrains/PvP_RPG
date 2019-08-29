@@ -7,7 +7,8 @@ import pygame
 
 import constants
 import creature_states
-import iso_grid
+import events
+#import iso_grid
 from resource_manager import get_images_from_sheet
 
 
@@ -16,18 +17,31 @@ SPRITE_H = 80
 
 SPEED = 4
 
-
 class Creature(abc.ABC, pygame.sprite.Sprite):
-    def __init__(self, pos=(0, 0), sprite_sheet=None):
+    def __init__(self, name='', pos=(0, 0), sprite_sheet=None):
         super().__init__()
+        #self.ev_mgr = event_manager
+        self.name = name
         self.pos = pos
+        if sprite_sheet is None:
+            self.sprites = {}
+            self.width = 0
+            self.height = 0
+        else:
+            self.sprites = get_images_from_sheet(sprite_sheet, SPRITE_W, SPRITE_H)
+            self.width = self.sprites[0].get_width()
+            self.height = self.sprites[0].get_height()
+        self.anim_speed = 8
+        self.listen_types = [
+            constants.EV_MOUSE_CLICK
+        ]
         self.iso_pos = None # tuple position with respect to the isometric
                             # battle grid
-        self.width = 0 #sprite height
-        self.height = 0 #sprite height
+        
         self.grid_offset = ((constants.TILE_W_HALF - (self.width / 2), (constants.TILE_H_HALF - self.height))) # The offset needed to center the sprite on a grid tile
         self.move_amount = 3 # number of tiles the player can move
-        self.speed_x = 0
+        self.x_speed = 0
+        self.y_speed = 0
         self.image = None
         self.rect = pygame.Rect((self.pos), (SPRITE_W, SPRITE_H))
         self.speed = 0
@@ -40,39 +54,36 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
         #self.requirements = {} # ['req' : quantity]
 
         #----------------------------------------------------------------------------------------------------
-        if sprite_sheet is None:
-            self.sprites = {}
-        else:
-            self.sprites = get_images_from_sheet(sprite_sheet, SPRITE_W, SPRITE_H)
-            self.animations = {}
-            self.animations['idle'] = [self.sprites[0], self.sprites[3]]
-            self.animations['attack'] = [self.sprites[1]]
-            self.animations['hurt'] = [self.sprites[3]]
-            self.animations['die'] = [self.sprites[2]]
-            self.animations['move'] = [self.sprites[0], self.sprites[3]] 
+        self.animations = {}
+        self.animations['idle'] = [self.sprites[0], self.sprites[3]]
+        self.animations['attack'] = [self.sprites[1]]
+        self.animations['hurt'] = [self.sprites[3]]
+        self.animations['die'] = [self.sprites[2]]
+        self.animations['move'] = [self.sprites[0], self.sprites[3]] 
 
 
     def __str__(self):
         return self.name
 
     # unused
-    def update(self, cam_offset):
+    def update(self):
         # Handle position adjustment for camera movement
         # TO DO: Maybe do this in the creature state?
         #   I don't like calling creature.update() and creature.run_state()
-        x = self.pos[0] + cam_offset[0]
-        y = self.pos[1] + cam_offset[1]
-        self.rect.move(x, y)
+        x = self.pos[0] + self.x_speed
+        y = self.pos[1] + self.y_speed
+        self.pos = (x, y)
+        self.rect.move_ip(self.x_speed, self.y_speed)
 
     def draw(self, surface):
-        surface.blit(self.state.animation[self.state.curr_frame], 
-                     self.pos)
+        surface.blit(self.state.animation[self.state.curr_frame], self.pos)
+        pygame.draw.rect(surface, (255, 0, 0), self.rect, 1)
 
     def draw_action(self, surface):
         """Calls the draw method for the current action being taken
         """
         if self.action is not None:
-            self.actions[self.action].draw(surface)
+            self.actions[self.action.ID].draw(surface)
 
     def reset_turn(self):
         if self.action is not None:
@@ -80,8 +91,9 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
             self.action = None
 
     def start_action(self, action_id):
-        self.action = action_id
-        self.actions[self.action].start()
+        self.action = self.actions[action_id]
+        self.action.start()
+        return self.action
 
     @abc.abstractmethod
     def on_event(self, event): pass
@@ -90,7 +102,31 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
     def run_state(self): pass
 
     @abc.abstractmethod
-    def take_turn(self, action): pass        
+    def take_turn(self, action): pass
+
+    def notify(self, event):
+        stop_checking = False
+        if isinstance(event, events.MouseEvent):
+            if self.rect.collidepoint(event.pos):
+                ev = events.AgentClicked(self.name)
+                self.ev_mgr.post(ev)
+                stop_checking = True
+                return stop_checking
+        '''
+        if agent.rect.collidepoint(pos): 
+                        cls.selected_agent = agent
+                        cls.tile_selected_pos = iso_to_cart(cls.selected_agent.iso_pos, with_offset=1)
+                        if cls.selected_agent == cls.active_agent:
+                            cls.turn_menu.is_active = True
+                            # Should we re-init the turn here
+                            click_handled = True
+                        else:
+                            cls.active_agent.reset_turn()
+                            cls.turn_menu.is_active = False
+                            #Show agent notecard
+                            click_handled = True
+                            break
+        '''
             
 
 
@@ -112,9 +148,8 @@ class ChaosCreature(Creature):
     age = 0
 
 
-    def __init__(self, pos=(0, 0), sprite_sheet=None):
-        super().__init__(pos, sprite_sheet)
-        self.name = 'chaos'
+    def __init__(self, name='chaos', pos=(0, 0), sprite_sheet=None):
+        super().__init__(name, pos, sprite_sheet)
         self.width = self.animations['idle'][0].get_width()
         self.height = self.animations['idle'][0].get_height()
         self.anim_speed = 8 #Num of game render cycles between animation frames
@@ -145,7 +180,6 @@ class ChaosCreature(Creature):
             self.prev_state = self.state
             self.state = temp
 
-        del temp
 
     def run_state(self):
         val = self.state.run()
@@ -171,9 +205,8 @@ class AirCreature(Creature):
 
     species = 'octo'
 
-    def __init__(self, pos=(0, 0), sprite_sheet=None):
-        super().__init__(pos, sprite_sheet)
-        self.name = 'air'
+    def __init__(self, name='air', pos=(0, 0), sprite_sheet=None):
+        super().__init__(name, pos, sprite_sheet)
         self.width = self.animations['idle'][0].get_width()
         self.height = self.animations['idle'][0].get_height()
         self.anim_speed = 8 #Num of game render cycles between animation frames

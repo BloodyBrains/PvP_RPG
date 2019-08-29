@@ -42,15 +42,18 @@ import pygame
 pygame.init()
 pygame.font.init()
 
+#import server
 import buttons
+import camera
 import constants
-
+#import client
 import creatures
 import creature_states
 import events
 import game_control
 import game_states
 import iso_grid
+#import network
 import player
 
 
@@ -60,12 +63,16 @@ def main():
     win = pygame.display.set_mode((constants.SCREEN_WIDTH, constants.SCREEN_HEIGHT))
 
     ev_mgr = events.EventManager()
-    game = game_control.Game(ev_mgr, clock, win)
+    cam = camera.Camera(ev_mgr)
+    game = game_control.Game(ev_mgr, clock, win, cam)
+    
+    
 
     #game.init()    
 
     game.run()    
 
+    pygame.display.quit()
     pygame.quit()
     quit()
 

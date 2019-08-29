@@ -2,3 +2,35 @@ TO DO:
 In lieu of resource_manager.get_sprites_from_sheet(), try working straight from the sheets 
 
 Calling set_colorkey(BLACK) is causing issues with the background images
+
+*Eliminate agent positions entirely, use only rects. Their positions will be
+    agent.rect.topleft
+
+Currently, events are events.Event class instances that passed to post() and notify().
+    It could be more efficient if they were simply global constants. If additional info
+    is needed (eg mouse_pos on a MOUSE_CLICK event) we could pass it along as a *kwarg
+
+Change game_state ids to constants
+
+Implement game_state stack to allow back and forward state transitions
+
+Switch to vectors for movement
+
+*Rethink the draw loop. Currently, we are update()ing only the absolute positions of agents
+    (relative to the map), and compensating for the camera offset in the draw() calls. The 
+    idea being that there is no sense updating positions every update() if the positions
+    are only modified during action updates (eg 'Move' command)
+
+*Faster tile_grid blitting-- Blit all of the tiles to one surface and then draw the surface
+    on draw()
+
+*Use dirt rects- Blit a piece of the background over the sprite's current location, erasing it.
+    Append the sprite's current location rectangle to a list called dirty_rects.
+    Move the sprite.
+    Draw the sprite at it's new location.
+    Append the sprite's new location to my dirty_rects list.
+    Call display.update(dirty_rects)
+
+Possible events to use callbacks: camera.Camera.center()
+
+Make transition for Camera.center(). Have it gradually move to new position.

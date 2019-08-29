@@ -40,7 +40,7 @@ class Action:
     def end(self): pass
 
     @abc.abstractmethod
-    def draw(self, game_win): pass
+    def draw(self, game_win, cam_pos): pass
 
     @abc.abstractmethod
     def check_click(self, mouse_pos): pass
@@ -174,7 +174,7 @@ class Move(Action):
             y = -(self._owner.move_amount - abs(x))
 
         for tile in iso_tiles:
-            self.valid_moves.append(iso_to_cart(tile, with_offset=1))
+            self.valid_moves.append(iso_to_cart(tile))
 
         self.make_move_buttons(iso_tiles) #Use the iso_tiles to make button ids
 
