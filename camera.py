@@ -27,18 +27,9 @@ class Camera:
             Arguments:
                 position {tuple(int)} -- position to center on
         """        
-        offset_x = position[0] - (constants.SCREEN_WIDTH / 2)
-        offset_y = position[1] - (constants.SCREEN_HEIGHT / 2)
-        camx = self.pos[0] + offset_x
-        camy = self.pos[1] + offset_y
-        self.pos = (camx, camy)
-        
-        x = (constants.SCREEN_WIDTH / 2) - position[0]
-        y = (constants.SCREEN_HEIGHT / 2) - position[1]
-        offset = (x, y)
-        
-        ev = events.CameraMove(offset)
-        self.ev_mgr.post(ev)
+        cam_x = position[0] - (constants.SCREEN_WIDTH / 2)
+        cam_y = position[1] - (constants.SCREEN_HEIGHT / 2)
+        self.pos = (cam_x, cam_y)
 
 
     # Initial values of the offset. Changes when the cam moves
