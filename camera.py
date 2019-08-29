@@ -8,6 +8,8 @@ class Camera:
         self.ev_mgr = event_manager
         event_manager.register_listener(self)
         self.pos = (0, 0)
+        self.x_speed = 0
+        self.y_speed = 0
         
 
     def notify(self, event):
@@ -25,19 +27,23 @@ class Camera:
             Arguments:
                 position {tuple(int)} -- position to center on
         """        
+        offset_x = position[0] - (constants.SCREEN_WIDTH / 2)
+        offset_y = position[1] - (constants.SCREEN_HEIGHT / 2)
+        camx = self.pos[0] + offset_x
+        camy = self.pos[1] + offset_y
+        self.pos = (camx, camy)
+        
         x = (constants.SCREEN_WIDTH / 2) - position[0]
         y = (constants.SCREEN_HEIGHT / 2) - position[1]
         offset = (x, y)
-        camx = self.pos[0] - x
-        camy = self.pos[1] - y
-        self.pos = (camx, camy)
+        
         ev = events.CameraMove(offset)
         self.ev_mgr.post(ev)
 
 
     # Initial values of the offset. Changes when the cam moves
-    offset_x = constants.CAM_STARTX
-    offset_y = constants.CAM_STARTY
+    #offset_x = constants.CAM_STARTX
+    #offset_y = constants.CAM_STARTY
 
-    x_speed = 0
-    y_speed = 0    
+    #x_speed = 0
+    #y_speed = 0    

@@ -34,6 +34,9 @@ class Action:
         pass
 
     @abc.abstractmethod
+    def update(self): pass
+
+    @abc.abstractmethod
     def run(self): pass
 
     @abc.abstractmethod
@@ -60,6 +63,7 @@ class Move(Action):
     def __init__(self, owner):
         super().__init__(owner)
         self.valid_moves = None     #List of tiles the agent can move to (cartesian)
+        self.iso_tiles = None       #List of iso tiles the player can move to
         self.selected_tile = None   #Tile the agent needs to move to
         self.has_moved = False      #Set True after agent moves
         self.tile_buttons = []      #List of buttons for all tiles in valid_moves
@@ -74,6 +78,8 @@ class Move(Action):
 
     def start(self):
         self._get_move_tiles()
+
+    def update(self): pass
 
     def run(self):
         """ Moves the agent to the selected tile in two moves (if neccessary)
@@ -151,7 +157,7 @@ class Move(Action):
         """
         # TO DO: check if tiles can be moved to
         self.valid_moves = []
-        iso_tiles = []
+        self.iso_tiles = []
         '''
          Assemble list of all valid tiles the agent can move to.
          Outer loop starts with the most negative valid x pos.
@@ -168,17 +174,17 @@ class Move(Action):
         y = -(self._owner.move_amount - abs(x))
         while x <= self._owner.move_amount:
             while y <= (self._owner.move_amount - abs(x)):
-                iso_tiles.append((self._owner.iso_pos[0] + x, self._owner.iso_pos[1] + y))
+                self.iso_tiles.append((self._owner.iso_pos[0] + x, self._owner.iso_pos[1] + y))
                 y += 1
             x += 1
             y = -(self._owner.move_amount - abs(x))
 
-        for tile in iso_tiles:
+        for tile in self.iso_tiles:
             self.valid_moves.append(iso_to_cart(tile))
 
-        self.make_move_buttons(iso_tiles) #Use the iso_tiles to make button ids
+        #self.make_move_buttons(iso_tiles) #Use the iso_tiles to make button ids
 
-    def make_move_buttons(self, tiles):
+    def make_move_buttons(self):
         """Makes a list of buttons.Button objects from 'tiles' that can be
             clicked on
             
@@ -195,10 +201,19 @@ class Move(Action):
             p4 = (tile[0] + constants.TILE_W_HALF, tile[1] + constants.TILE_HEIGHT)
             poly = [p1, p2, p3, p4]
 
-            self.tile_buttons.append(buttons.ButtonTile(str(tiles[i]),
+            self.tile_buttons.append(buttons.ButtonTile(str(self.iso_tiles[i]),
                                                     sprite=self.tile_img,
                                                     pos=(tile[0], tile[1]),
-                                                    iso_pos=tiles[i],
+                                                    iso_pos=self.iso_tiles[i],
                                                     polygon=poly))
+            i += 1
+
+
+    def adjust_positions(self, cam_pos):
+        i = 0
+        for tile in self.valid_moves:
+            x = tile[0] - cam_pos[0]
+            y = tile[1] - cam_pos[1]
+            self.valid_moves[i] = (x, y)
             i += 1
 

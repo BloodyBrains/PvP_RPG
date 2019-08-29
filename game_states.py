@@ -264,12 +264,6 @@ class BattleScreen(GameState):
     active_agent = None # the creature or other agent whose turn it is 
     selected_agent = None #agent who is selected
 
-    cam_speed_x = 0 # Number of pixels cam moves per update call. Set to 0 when
-                  #     cam is not moving
-    cam_speed_y = 0
-    cam_offset_x = 0
-    cam_offset_y = 0
-
 
     def __init__(self, images, player1, player2, event_manager, game): 
         self.bgr = images['bgr']
@@ -286,6 +280,9 @@ class BattleScreen(GameState):
         self.cam = self.game.cam
         self.internal_state = ''
         self.turn_action = None # Reference to the action the active_agent is performing
+        self.cam_speed_x = 0 # Number of pixels cam moves per update call. Set to 0 when
+                             #     cam is not moving
+        self.cam_speed_y = 0
 
     def update(self):
         
@@ -402,6 +399,8 @@ class BattleScreen(GameState):
                                 deactivate turn menu
                                 '''
                                 self.turn_action = self.active_agent.start_action(button.ID)
+                                self.turn_action.adjust_positions(self.cam.pos)
+                                self.turn_action.make_move_buttons()
                                 self.turn_menu.deactivate()
                                 self.internal_state = 'action'
                                 click_handled = True
