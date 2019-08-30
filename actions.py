@@ -118,9 +118,9 @@ class Move(Action):
     def end(self):
         self.has_moved = True       
 
-    def draw(self, game_win):
+    def draw(self, game_win, cam_pos):
         for but in self.tile_buttons:
-            but.draw(game_win)
+            but.draw(game_win, cam_pos)
 
     def check_click(self, mouse_pos):
         """ Checks if a tile has been clicked on to move to.
@@ -203,7 +203,7 @@ class Move(Action):
 
             self.tile_buttons.append(buttons.ButtonTile(str(self.iso_tiles[i]),
                                                     sprite=self.tile_img,
-                                                    pos=(tile[0], tile[1]),
+                                                    pos=tile,
                                                     iso_pos=self.iso_tiles[i],
                                                     polygon=poly))
             i += 1

@@ -55,7 +55,7 @@ class IsoGrid():
         tile = None
 
 
-    def draw_tiles(self, game_win):
+    def draw_tiles(self, game_win, cam_pos):
         for row_iter, row in enumerate(self.map_data):
             for col, tile in enumerate(row):
                 if tile == 0:
@@ -63,8 +63,8 @@ class IsoGrid():
 
                 cart_x = (col * (self.TILE_WIDTH / 2)) + (row_iter * (self.TILE_WIDTH / 2))
                 cart_y = -(col * (self.TILE_HEIGHT /2)) + (row_iter * (self.TILE_HEIGHT /2))
-                game_win.blit(surf, (self.pos[0] + cart_x, 
-                                     self.pos[1] + cart_y))
+                game_win.blit(surf, (self.pos[0] + (cart_x - cam_pos[0]), 
+                                     self.pos[1] + (cart_y - cam_pos[1])))
 
     def update(self):
         x = self.pos[0] + self.x_speed

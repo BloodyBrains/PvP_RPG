@@ -75,15 +75,17 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
         self.pos = (x, y)
         self.rect.move_ip(self.x_speed, self.y_speed)
 
-    def draw(self, surface):
-        surface.blit(self.state.animation[self.state.curr_frame], self.pos)
+    def draw(self, surface, cam_pos):
+        x = self.pos[0] - cam_pos[0]
+        y = self.pos[1] - cam_pos[1]
+        surface.blit(self.state.animation[self.state.curr_frame], (x, y))
         pygame.draw.rect(surface, (255, 0, 0), self.rect, 1)
 
-    def draw_action(self, surface):
+    def draw_action(self, surface, cam_pos):
         """Calls the draw method for the current action being taken
         """
         if self.action is not None:
-            self.actions[self.action.ID].draw(surface)
+            self.actions[self.action.ID].draw(surface, cam_pos)
 
     def reset_turn(self):
         if self.action is not None:

@@ -80,6 +80,11 @@ class ButtonTile(Button):
         self.poly = polygon
         self.sprite = sprite
 
+    def draw(self, win, cam_pos):
+        x = self.pos[0] - cam_pos[0]
+        y = self.pos[1] - cam_pos[1]
+        win.blit(self.sprite, (x, y))
+
     def check_click(self, mouse_pos):
         """Returns if the polygon contains the mouse_pos or not
         

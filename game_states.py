@@ -298,53 +298,56 @@ class BattleScreen(GameState):
                 #Check for Arrow Keys
                 if event.key == pygame.K_LEFT:
                     self.cam.x_speed = -constants.CAM_SPEED
-                    self.iso_grid.x_speed = constants.CAM_SPEED
-                    for agent in self.agents.values():
-                        agent.x_speed = constants.CAM_SPEED
+                    #self.iso_grid.x_speed = constants.CAM_SPEED
+                    #for agent in self.agents.values():
+                    #    agent.x_speed = constants.CAM_SPEED
                 elif event.key == pygame.K_RIGHT:
                     self.cam.x_speed = constants.CAM_SPEED
-                    self.iso_grid.x_speed = -constants.CAM_SPEED
-                    for agent in self.agents.values():
-                        agent.x_speed = -constants.CAM_SPEED
+                    #self.iso_grid.x_speed = -constants.CAM_SPEED
+                    #for agent in self.agents.values():
+                    #    agent.x_speed = -constants.CAM_SPEED
 
                 if event.key == pygame.K_UP:
                     self.cam.y_speed = -constants.CAM_SPEED
-                    self.iso_grid.y_speed = constants.CAM_SPEED
-                    for agent in self.agents.values():
-                        agent.y_speed = constants.CAM_SPEED               
+                    #self.iso_grid.y_speed = constants.CAM_SPEED
+                    #for agent in self.agents.values():
+                    #    agent.y_speed = constants.CAM_SPEED               
                 elif event.key == pygame.K_DOWN:
                     self.cam.y_speed = constants.CAM_SPEED
-                    self.iso_grid.y_speed = -constants.CAM_SPEED
-                    for agent in self.agents.values():
-                        agent.y_speed = -constants.CAM_SPEED
+                    #self.iso_grid.y_speed = -constants.CAM_SPEED
+                    #for agent in self.agents.values():
+                    #    agent.y_speed = -constants.CAM_SPEED
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
                     self.cam.x_speed = 0
-                    self.iso_grid.x_speed = 0
-                    for agent in self.agents.values():
-                        agent.x_speed = 0
+                    #self.iso_grid.x_speed = 0
+                    #for agent in self.agents.values():
+                    #    agent.x_speed = 0
                 elif event.key == pygame.K_RIGHT:
                     self.cam.x_speed = 0
-                    self.iso_grid.x_speed = 0
-                    for agent in self.agents.values():
-                        agent.x_speed = 0
+                    #self.iso_grid.x_speed = 0
+                    #for agent in self.agents.values():
+                    #    agent.x_speed = 0
 
                 if event.key == pygame.K_UP:
                     self.cam.y_speed = 0
-                    self.iso_grid.y_speed = 0
-                    for agent in self.agents.values():
-                        agent.y_speed = 0
+                    #self.iso_grid.y_speed = 0
+                    #for agent in self.agents.values():
+                    #    agent.y_speed = 0
                 elif event.key == pygame.K_DOWN:
                     self.cam.y_speed = 0
-                    self.iso_grid.y_speed = 0
-                    for agent in self.agents.values():
-                        agent.y_speed = 0
+                    #self.iso_grid.y_speed = 0
+                    #for agent in self.agents.values():
+                    #    agent.y_speed = 0
             
         
             # Check for clicks------------------------------------------------
             if event.type == pygame.MOUSEBUTTONDOWN:
-                pos = pygame.mouse.get_pos()
+                screen_pos = pygame.mouse.get_pos() # For clicks on HUD objects relative to camera
+                x = screen_pos[0] - self.cam.pos[0] 
+                y = screen_pos[1] - self.cam.pos[1]
+                pos = (x, y)                        # For clicks on map objects
 
                 click_handled = False
 
@@ -390,7 +393,7 @@ class BattleScreen(GameState):
                 if not click_handled:
                     if self.turn_menu.is_active:
                         for button in self.turn_menu.buttons.values():
-                            if button.rect.collidepoint(pos):
+                            if button.rect.collidepoint(screen_pos):
                                 '''
                                 set the active_agents action to selected action
                                 get reference to the action
@@ -399,7 +402,7 @@ class BattleScreen(GameState):
                                 deactivate turn menu
                                 '''
                                 self.turn_action = self.active_agent.start_action(button.ID)
-                                self.turn_action.adjust_positions(self.cam.pos)
+                                #self.turn_action.adjust_positions(self.cam.pos)
                                 self.turn_action.make_move_buttons()
                                 self.turn_menu.deactivate()
                                 self.internal_state = 'action'
@@ -423,9 +426,9 @@ class BattleScreen(GameState):
 
         self.cam.update()
         self.iso_grid.update()
-        x = self.tile_selected_pos[0] - self.cam.x_speed
-        y = self.tile_selected_pos[1] - self.cam.y_speed
-        self.tile_selected_pos = (x, y)
+        #x = self.tile_selected_pos[0] - self.cam.x_speed
+        #y = self.tile_selected_pos[1] - self.cam.y_speed
+        #self.tile_selected_pos = (x, y)
         for agent in self.agents.values():
             agent.update()
             #agent.run_state()
@@ -480,16 +483,18 @@ class BattleScreen(GameState):
     def draw(self, game_win):
         game_win.blit(self.bgr, (0, 0))
 
-        self.iso_grid.draw_tiles(game_win) #How is this working?!!!!!!
+        self.iso_grid.draw_tiles(game_win, self.cam.pos) #How is this working?!!!!!!
 
         # draw rectangle on selected agents tile
         # TO DO: Wrap this in a class and pass in cam_pos, maybe
-        game_win.blit(self.tile_selected, self.tile_selected_pos)
+        x = self.tile_selected_pos[0] - self.cam.pos[0]
+        y = self.tile_selected_pos[1] - self.cam.pos[1]
+        game_win.blit(self.tile_selected, (x, y))
 
         # TO DO: Move this to the actions.Move.draw()
         # draw valid move tiles for active agent
         # draw() call for Actions
-        self.active_agent.draw_action(game_win)
+        self.active_agent.draw_action(game_win, self.cam.pos)
         '''
         if cls.turn_action is not None:
             cls.active_agent.actions[cls.turn_action].draw(game_win)
@@ -498,7 +503,7 @@ class BattleScreen(GameState):
         #    game_win.blit(actions.Move.tile, (t[0] + camera.offset_x, t[1] + camera.offset_y))
 
         for agent in self.agents.values():
-            agent.draw(game_win)
+            agent.draw(game_win, self.cam.pos)
             #new_rect = pygame.Rect(agent.rect.topleft,
             #                       (agent.width, agent.height))
             #pygame.draw.rect(game_win, (255, 0, 0), new_rect, 1)
@@ -507,6 +512,7 @@ class BattleScreen(GameState):
             self.turn_menu.draw(game_win)
 
     def notify(self, event):
+        '''
         if isinstance(event, events.CameraMove):
             x = self.iso_grid.pos[0] + event.offset[0]
             y = self.iso_grid.pos[1] + event.offset[1]
@@ -521,6 +527,7 @@ class BattleScreen(GameState):
                 y = agent.pos[1] + event.offset[1]
                 agent.pos = (x, y)
                 agent.rect.move_ip(event.offset)
+        '''
         '''
         if isinstance(event, events.CameraMove):
             if self.internal_state == 'open':
