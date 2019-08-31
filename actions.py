@@ -43,6 +43,16 @@ class Action:
     def end(self): pass
 
     @abc.abstractmethod
+    def handle_input(self, event, *args): 
+        """Called from game_states.BattleState.update to handle user
+            input events that are specific to the Action.
+            
+            Arguments:
+                event {pygame.event} -- pygame event
+        """
+        pass
+
+    @abc.abstractmethod
     def draw(self, game_win, cam_pos): pass
 
     @abc.abstractmethod
@@ -62,6 +72,9 @@ class Move(Action):
 
     def __init__(self, owner):
         super().__init__(owner)
+        self.events_to_handle = [
+            constants.EV_MOUSE_CLICK
+        ]
         self.valid_moves = None     #List of tiles the agent can move to (cartesian)
         self.iso_tiles = None       #List of iso tiles the player can move to
         self.selected_tile = None   #Tile the agent needs to move to
@@ -116,7 +129,18 @@ class Move(Action):
                     distance2 = 0
 
     def end(self):
-        self.has_moved = True       
+        self.has_moved = True
+
+    def handle_input(self, event, *args):
+        handled = False
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = args[0]
+            for butt in self.tile_buttons:
+                if butt.rect.collidepoint(mouse_pos):
+                    print("clicked on move tile!")
+                    handled = True
+        
+        return handled
 
     def draw(self, game_win, cam_pos):
         for but in self.tile_buttons:

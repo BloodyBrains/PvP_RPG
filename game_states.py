@@ -264,6 +264,10 @@ class BattleScreen(GameState):
     active_agent = None # the creature or other agent whose turn it is 
     selected_agent = None #agent who is selected
 
+    # internal_state constants
+    OPEN = 0
+    ACTION = 1
+
 
     def __init__(self, images, player1, player2, event_manager, game): 
         self.bgr = images['bgr']
@@ -278,13 +282,19 @@ class BattleScreen(GameState):
         event_manager.register_listener(self, self.listen_types)
         self.game = game
         self.cam = self.game.cam
-        self.internal_state = ''
+        self.internal_state = self.OPEN
         self.turn_action = None # Reference to the action the active_agent is performing
         self.cam_speed_x = 0 # Number of pixels cam moves per update call. Set to 0 when
                              #     cam is not moving
         self.cam_speed_y = 0
 
     def update(self):
+        '''
+            Improvement: Have components (eg. Actions, Pop-up Menus) register as
+                listeners to the game_state along with the type of input event/s they're
+                listening for. Then, simply loop through registered listeners calling
+                handle_event(event)
+        '''
         
         #CHECK FOR EVENTS------------------------------------------------------------------
         for event in pygame.event.get():
@@ -293,30 +303,39 @@ class BattleScreen(GameState):
                 ev = events.QuitEvent()
                 self.ev_mgr.post(ev)
                 return
+
             #Check for Keys---------------------------------------------------
             if event.type == pygame.KEYDOWN:
+                if self.internal_state == self.ACTION:
+                    handled = self.turn_action.handle_input(event)
+                    if handled: continue
+
                 #Check for Arrow Keys
                 if event.key == pygame.K_LEFT:
                     self.cam.x_speed = -constants.CAM_SPEED
                     #self.iso_grid.x_speed = constants.CAM_SPEED
                     #for agent in self.agents.values():
                     #    agent.x_speed = constants.CAM_SPEED
+                    continue
                 elif event.key == pygame.K_RIGHT:
                     self.cam.x_speed = constants.CAM_SPEED
                     #self.iso_grid.x_speed = -constants.CAM_SPEED
                     #for agent in self.agents.values():
                     #    agent.x_speed = -constants.CAM_SPEED
+                    continue
 
                 if event.key == pygame.K_UP:
                     self.cam.y_speed = -constants.CAM_SPEED
                     #self.iso_grid.y_speed = constants.CAM_SPEED
                     #for agent in self.agents.values():
-                    #    agent.y_speed = constants.CAM_SPEED               
+                    #    agent.y_speed = constants.CAM_SPEED
+                    continue               
                 elif event.key == pygame.K_DOWN:
                     self.cam.y_speed = constants.CAM_SPEED
                     #self.iso_grid.y_speed = -constants.CAM_SPEED
                     #for agent in self.agents.values():
                     #    agent.y_speed = -constants.CAM_SPEED
+                    continue
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
@@ -324,59 +343,84 @@ class BattleScreen(GameState):
                     #self.iso_grid.x_speed = 0
                     #for agent in self.agents.values():
                     #    agent.x_speed = 0
+                    continue
                 elif event.key == pygame.K_RIGHT:
                     self.cam.x_speed = 0
                     #self.iso_grid.x_speed = 0
                     #for agent in self.agents.values():
                     #    agent.x_speed = 0
+                    continue
 
                 if event.key == pygame.K_UP:
                     self.cam.y_speed = 0
                     #self.iso_grid.y_speed = 0
                     #for agent in self.agents.values():
                     #    agent.y_speed = 0
+                    continue
                 elif event.key == pygame.K_DOWN:
                     self.cam.y_speed = 0
                     #self.iso_grid.y_speed = 0
                     #for agent in self.agents.values():
                     #    agent.y_speed = 0
-            
+                    continue            
         
             # Check for clicks------------------------------------------------
             if event.type == pygame.MOUSEBUTTONDOWN:
                 screen_pos = pygame.mouse.get_pos() # For clicks on HUD objects relative to camera
-                x = screen_pos[0] - self.cam.pos[0] 
-                y = screen_pos[1] - self.cam.pos[1]
+                x = screen_pos[0] + self.cam.pos[0] 
+                y = screen_pos[1] + self.cam.pos[1]
                 pos = (x, y)                        # For clicks on map objects
 
-                click_handled = False
+                if self.internal_state == self.ACTION:
+                    handled = self.turn_action.handle_input(event, pos)
+                    if handled: continue
+
+                # Check for clicks on HUD objects first
+                if self.turn_menu.is_active:
+                    for button in self.turn_menu.buttons.values():
+                        handled = False
+                        if button.rect.collidepoint(screen_pos):
+                            '''
+                            We need to instantiate the Action instance now rather than
+                                in the agents constructor
+                            set the active_agents action to selected action
+                            get reference to the action
+                            set internal state to action state
+                            init the action
+                            deactivate turn menu
+                            '''
+                            self.turn_action = self.active_agent.start_action(button.ID)
+                            #self.turn_action.adjust_positions(self.cam.pos)
+                            self.turn_action.make_move_buttons()
+                            self.turn_menu.deactivate()
+                            # an Action method should notify the state
+                            self.internal_state = self.ACTION
+                            handled = True
+                            break
+                    if handled:
+                        continue       
 
                 #for listener in cls.listeners
-                
+
                 #Check if game agent is clicked--------------------------
                 for agent in self.agents.values():
-                    if not click_handled:
-                        if agent.rect.collidepoint(pos): 
-                            if self.internal_state == 'open':
-                                self.selected_agent = agent
-                                self.tile_selected_pos = iso_to_cart(self.selected_agent.iso_pos)
-                                x = self.tile_selected_pos[0] - self.cam.pos[0]
-                                y = self.tile_selected_pos[1] - self.cam.pos[1]
-                                self.tile_selected_pos = (x, y)
-                                self.cam.center(agent.rect.center)                                
-                                if self.selected_agent == self.active_agent:
-                                    self.active_agent.turn_init()
-                                    self.turn_menu.activate(self.active_agent.valid_actions)
-                                    click_handled = True
-                                else:
-                                    #self.active_agent.reset_turn()
-                                    self.turn_menu.deactivate()
-                                    #Show agent notecard
-                                    click_handled = True
-                            else:
-                                print('game_state.BattleState has no internal state: ', self.internal_state)
-                    else:
-                        break
+                    if agent.rect.collidepoint(pos): 
+                        #if self.internal_state == 'open':
+                        self.internal_state = self.OPEN
+                        self.selected_agent = agent
+                        self.tile_selected_pos = iso_to_cart(self.selected_agent.iso_pos)
+                        self.cam.center(agent.rect.center)                                
+                        if self.selected_agent == self.active_agent:
+                            self.active_agent.turn_init()
+                            self.turn_menu.activate(self.active_agent.valid_actions)
+                            continue
+                        else:
+                            #self.active_agent.reset_turn()
+                            self.turn_menu.deactivate()
+                            #Show agent notecard
+                            continue
+                        #else:
+                        #    print('game_state.BattleState has no internal state: ', self.internal_state)
                 #-------------------------------------------------------------------------------
             
                 '''
@@ -390,26 +434,9 @@ class BattleScreen(GameState):
                 '''
                 
                 #Check if turn_menu button is clicked-------------------------------------------
-                if not click_handled:
-                    if self.turn_menu.is_active:
-                        for button in self.turn_menu.buttons.values():
-                            if button.rect.collidepoint(screen_pos):
-                                '''
-                                set the active_agents action to selected action
-                                get reference to the action
-                                set internal state to action state
-                                init the action
-                                deactivate turn menu
-                                '''
-                                self.turn_action = self.active_agent.start_action(button.ID)
-                                #self.turn_action.adjust_positions(self.cam.pos)
-                                self.turn_action.make_move_buttons()
-                                self.turn_menu.deactivate()
-                                self.internal_state = 'action'
-                                click_handled = True
-                                break
-                else:
-                    break
+                # Must have clicked on unoccupied tile
+                # Cancel any action in progress??
+                self.internal_state = self.OPEN
                 #-------------------------------------------------------------------------------
 
                 '''

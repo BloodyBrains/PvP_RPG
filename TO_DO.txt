@@ -12,25 +12,28 @@ Currently, events are events.Event class instances that passed to post() and not
 
 Change game_state ids to constants
 
-Implement game_state stack to allow back and forward state transitions
+Implement game_state stack (or circular queue) to allow back and forward state transitions
 
 Switch to vectors for movement
 
-*Rethink the draw loop. Currently, we are update()ing only the absolute positions of agents
-    (relative to the map), and compensating for the camera offset in the draw() calls. The 
-    idea being that there is no sense updating positions every update() if the positions
-    are only modified during action updates (eg 'Move' command)
+*Look into pygame (or SDL, openGL) culling.
+
+Update() calls need to run on a delta time to achieve a real-time updating that doesn't 
+    change depending on the machine that is running it
 
 *Faster tile_grid blitting-- Blit all of the tiles to one surface and then draw the surface
     on draw()
 
-*Use dirt rects- Blit a piece of the background over the sprite's current location, erasing it.
+*Use dirty rects- Blit a piece of the background over the sprite's current location, erasing it.
     Append the sprite's current location rectangle to a list called dirty_rects.
     Move the sprite.
     Draw the sprite at it's new location.
     Append the sprite's new location to my dirty_rects list.
     Call display.update(dirty_rects)
 
-Possible events to use callbacks: camera.Camera.center()
-
 Make transition for Camera.center(). Have it gradually move to new position.
+
+Improvement: Have components (eg. Actions, Pop-up Menus) register as
+                listeners to the game_state along with the type of input event/s they're
+                listening for. Then, simply loop through registered listeners calling
+                handle_event(event)
