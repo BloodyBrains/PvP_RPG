@@ -377,8 +377,8 @@ class BattleScreen(GameState):
 
                 # Check for clicks on HUD objects first
                 if self.turn_menu.is_active:
+                    handled = False
                     for button in self.turn_menu.buttons.values():
-                        handled = False
                         if button.rect.collidepoint(screen_pos):
                             '''
                             We need to instantiate the Action instance now rather than

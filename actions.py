@@ -13,6 +13,8 @@ import constants
 from functions import iso_to_cart
 
 
+HOOKS = {}
+
 class Action:
     def __init__(self, owner):
         self._owner = owner
@@ -70,6 +72,13 @@ class Move(Action):
     #tile.set_alpha(100)
     ID = 'move'
 
+    @staticmethod
+    def check_reqs(owner):
+        print(str(owner.has_moved))
+        return not owner.has_moved
+
+    hook = {ID: check_reqs}
+
     def __init__(self, owner):
         super().__init__(owner)
         self.events_to_handle = [
@@ -86,8 +95,6 @@ class Move(Action):
         self.second_pos = (0, 0)    #Move along the isometric y column
         self.slope = 0
 
-    def check_reqs(self):
-        return not self.has_moved
 
     def start(self):
         self._get_move_tiles()
@@ -240,4 +247,14 @@ class Move(Action):
             y = tile[1] - cam_pos[1]
             self.valid_moves[i] = (x, y)
             i += 1
+
+HOOKS["move"] = Move.check_reqs
+
+
+#---------------------------------------------------------------------------------------
+def get_action(action_id, owner):
+    if action_id == 'move':
+        return Move(owner)
+    else:
+        print("error: no actions.Action: ", action_id)
 

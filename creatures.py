@@ -5,6 +5,7 @@ import os
 
 import pygame
 
+import actions
 import constants
 import creature_states
 import events
@@ -46,12 +47,13 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
         self.rect = pygame.Rect((self.pos), (SPRITE_W, SPRITE_H))
         self.speed = 0
         self.ap = 0
-        self.actions = {} #dict of all actions owned by agent
+        self.actions = {} #dict of actions.HOOKS owned by agent
         self.action = None # str ID of the current action being taken
         self.valid_actions = [] #list of action ids the agent can currently perform
         self.turn_state = 'init' # dictates the phase of the active agents turn
                                  #      init, update, finish
         #self.requirements = {} # ['req' : quantity]
+        self.has_moved = False
 
         #----------------------------------------------------------------------------------------------------
         self.animations = {}
@@ -85,7 +87,7 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
         """Calls the draw method for the current action being taken
         """
         if self.action is not None:
-            self.actions[self.action.ID].draw(surface, cam_pos)
+            self.action.draw(surface, cam_pos)
 
     def reset_turn(self):
         if self.action is not None:
@@ -93,7 +95,7 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
             self.action = None
 
     def start_action(self, action_id):
-        self.action = self.actions[action_id]
+        self.action = actions.get_action(action_id, self)
         self.action.start()
         return self.action
 

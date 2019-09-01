@@ -60,8 +60,11 @@ class Player(creatures.Creature):
         self.speed = 5
         self.ap = self.speed
         
-        self.actions['move'] = actions.Move(self)
-        self.valid_actions = []
+        #self.actions['move'] = actions.Move(self)
+        #self.actions = {} #List of action.ids the agent owns
+        action_hooks = {'move': actions.HOOKS['move']}
+        self.add_actions(action_hooks)
+        #self.valid_actions = [] #List of actions the agent can currently perform
 
         # Give the player some creatures. Change later!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         self.requirements['red'] = 1
@@ -110,9 +113,10 @@ class Player(creatures.Creature):
 
         # Check for action reqs; assemble valid_actions list
         self.valid_actions = []
-        for action in self.actions.values():
-            if action.check_reqs():
-                self.valid_actions.append(action.ID)
+        #for action in self.actions.values():
+        #    if action.check_reqs():
+        #        self.valid_actions.append(action.ID)
+        self.check_action_reqs()
 
         # assemble turn menu from valid_actions
         #game_states.BattleScreen.make_turn_menu(self.valid_actions) #TO DO: this is ugly
@@ -124,7 +128,13 @@ class Player(creatures.Creature):
         # update turn menu
         # set turn_state to 'finish'
         
+    def add_actions(self, action_hooks):
+        self.actions.update(action_hooks) 
 
+    def check_action_reqs(self):
+        for action in self.actions:
+            if self.actions[action](self):
+                self.valid_actions.append(action)
 
     def summon_add(self, *summon_ids):
         for elem in summon_ids:
