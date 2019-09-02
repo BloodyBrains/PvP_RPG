@@ -89,15 +89,21 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
         if self.action is not None:
             self.action.draw(surface, cam_pos)
 
+    def end_action(self):
+        self.action = None
+
     def reset_turn(self):
         if self.action is not None:
             self.actions[self.action].reset()
             self.action = None
 
-    def start_action(self, action_id):
-        self.action = actions.get_action(action_id, self)
+    def start_action(self, action_):
+        self.action = action_
         self.action.start()
-        return self.action
+
+    def move(self, iso_pos):
+        self.has_moved = True
+        print("agent moved: ", str(self))
 
     @abc.abstractmethod
     def on_event(self, event): pass

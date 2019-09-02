@@ -126,6 +126,11 @@ class EventManager(borg.Borg):
                 break
 
 
+# EVENT TYPES -------------------------------------------------------------------------------
+class ActionEnd(Event):
+    def __init__(self):
+        self.id = constants.EV_ACTION_END
+
 class AgentClick(Event):
     def __init__(self, agent_id):
         self.id = agent_id

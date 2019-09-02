@@ -10,14 +10,17 @@ import pygame
 import buttons
 import camera
 import constants
+import events
 from functions import iso_to_cart
 
 
 HOOKS = {}
 
 class Action:
-    def __init__(self, owner):
+    def __init__(self, owner, event_manager):
         self._owner = owner
+        self.ev_mgr = event_manager
+        event_manager.register_listener(self)
         self.is_drawing = False
 
     @abc.abstractmethod
@@ -79,8 +82,8 @@ class Move(Action):
 
     hook = {ID: check_reqs}
 
-    def __init__(self, owner):
-        super().__init__(owner)
+    def __init__(self, owner, event_manager):
+        super().__init__(owner, event_manager)
         self.events_to_handle = [
             constants.EV_MOUSE_CLICK
         ]
@@ -136,7 +139,9 @@ class Move(Action):
                     distance2 = 0
 
     def end(self):
-        self.has_moved = True
+        self._owner.end_action()
+        ev = events.ActionEnd()
+        self.ev_mgr.post(ev)
 
     def handle_input(self, event, *args):
         handled = False
@@ -145,6 +150,8 @@ class Move(Action):
             for butt in self.tile_buttons:
                 if butt.rect.collidepoint(mouse_pos):
                     print("clicked on move tile!")
+                    self._owner.move(butt.iso_pos)
+                    self.end()
                     handled = True
         
         return handled
@@ -252,9 +259,9 @@ HOOKS["move"] = Move.check_reqs
 
 
 #---------------------------------------------------------------------------------------
-def get_action(action_id, owner):
+def get_action(action_id, owner, event_manager):
     if action_id == 'move':
-        return Move(owner)
+        return Move(owner, event_manager)
     else:
         print("error: no actions.Action: ", action_id)
 

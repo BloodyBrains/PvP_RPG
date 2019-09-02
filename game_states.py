@@ -277,7 +277,8 @@ class BattleScreen(GameState):
         self.ev_mgr = event_manager
         self.listen_types = [
             constants.EV_AGENT_CLICKED,
-            constants.EV_CAM_MOVE
+            constants.EV_CAM_MOVE,
+            constants.EV_ACTION_END
         ]
         event_manager.register_listener(self, self.listen_types)
         self.game = game
@@ -389,7 +390,9 @@ class BattleScreen(GameState):
                             init the action
                             deactivate turn menu
                             '''
-                            self.turn_action = self.active_agent.start_action(button.ID)
+                            self.turn_action = actions.get_action(button.ID, self.active_agent, self.ev_mgr)
+                            self.active_agent.start_action(self.turn_action)
+                            #self.turn_action = self.active_agent.start_action(button.ID)
                             #self.turn_action.adjust_positions(self.cam.pos)
                             self.turn_action.make_move_buttons()
                             self.turn_menu.deactivate()
@@ -539,6 +542,9 @@ class BattleScreen(GameState):
             self.turn_menu.draw(game_win)
 
     def notify(self, event):
+        if isinstance(event, events.ActionEnd):
+            self.turn_action = None
+            self.internal_state = 'open' #TO DO: Change this to state stack pop()
         '''
         if isinstance(event, events.CameraMove):
             x = self.iso_grid.pos[0] + event.offset[0]
