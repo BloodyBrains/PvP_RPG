@@ -6,7 +6,7 @@ Calling set_colorkey(BLACK) is causing issues with the background images
 *Eliminate agent positions entirely, use only rects. Their positions will be
     agent.rect.topleft
 
-Currently, events are events.Event class instances that passed to post() and notify().
+Currently, events are events.Event class instances that are passed to post() and notify().
     It could be more efficient if they were simply global constants. If additional info
     is needed (eg mouse_pos on a MOUSE_CLICK event) we could pass it along as a *kwarg
 
@@ -37,3 +37,10 @@ Improvement: Have components (eg. Actions, Pop-up Menus) register as
                 listeners to the game_state along with the type of input event/s they're
                 listening for. Then, simply loop through registered listeners calling
                 handle_event(event)
+
+Change Creature.states to a list of creature_states.ids. There should be only one instance 
+    of a creature_state at a given time, referenced by Creature.state
+
+Fix hardcoded state ids to constants
+
+Make sure notify() is returning a stop flag when necessary

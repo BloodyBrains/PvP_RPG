@@ -460,8 +460,8 @@ class BattleScreen(GameState):
         #y = self.tile_selected_pos[1] - self.cam.y_speed
         #self.tile_selected_pos = (x, y)
         for agent in self.agents.values():
-            agent.update()
-            #agent.run_state()
+            #agent.update()
+            agent.run_state()
 
         if self.turn_action is not None:
             self.turn_action.update()

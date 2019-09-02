@@ -63,6 +63,23 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
         self.animations['die'] = [self.sprites[2]]
         self.animations['move'] = [self.sprites[0], self.sprites[3]] 
 
+        self.states = {}
+        self.states['idle'] = creature_states.IdleState(self.animations['idle'],
+                                                        self.anim_speed,
+                                                        self)
+        self.states['attack'] = creature_states.AttackState(self.animations['attack'],
+                                                          self.anim_speed,
+                                                          self)
+        #self.states['hurt'] = creature_states.HurtState(self.animations['hurt'],
+        #                                                self.anim_speed)
+        self.states['die'] = creature_states.DieState(self.animations['die'],
+                                                       self.anim_speed,
+                                                       self)
+        self.states['move'] = creature_states.Moving(self.animations['move'],
+                                                        self.anim_speed,
+                                                        self)
+        self.state = self.states['idle']
+
 
     def __str__(self):
         return self.name
@@ -103,6 +120,8 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
 
     def move(self, iso_pos):
         self.has_moved = True
+        self.on_event('move')
+        self.state.on_enter(iso_pos)
         print("agent moved: ", str(self))
 
     @abc.abstractmethod
@@ -166,15 +185,20 @@ class ChaosCreature(Creature):
                             #   at 30 FPS
         self.states = {}
         self.states['idle'] = creature_states.IdleState(self.animations['idle'],
-                                                        self.anim_speed)
+                                                        self.anim_speed,
+                                                        self)
         self.states['attack'] = creature_states.IdleState(self.animations['attack'],
-                                                          self.anim_speed)
+                                                          self.anim_speed,
+                                                          self)
         self.states['hurt'] = creature_states.IdleState(self.animations['hurt'],
-                                                        self.anim_speed)
+                                                        self.anim_speed,
+                                                        self)
         self.states['die'] = creature_states.IdleState(self.animations['die'],
-                                                       self.anim_speed)
+                                                       self.anim_speed,
+                                                       self)
         self.states['moving'] = creature_states.Moving(self.animations['move'],
-                                                        self.anim_speed)
+                                                        self.anim_speed,
+                                                        self)
         self.state = self.states['idle']
 
         self.speed = 5
@@ -223,15 +247,20 @@ class AirCreature(Creature):
                             #   at 30 FPS
         self.states = {}
         self.states['idle'] = creature_states.IdleState(self.animations['idle'],
-                                                        self.anim_speed)
+                                                        self.anim_speed,
+                                                        self)
         self.states['attack'] = creature_states.IdleState(self.animations['attack'],
-                                                          self.anim_speed)
+                                                          self.anim_speed,
+                                                          self)
         self.states['hurt'] = creature_states.IdleState(self.animations['hurt'],
-                                                        self.anim_speed)
+                                                        self.anim_speed,
+                                                        self)
         self.states['die'] = creature_states.IdleState(self.animations['die'],
-                                                       self.anim_speed)
+                                                       self.anim_speed,
+                                                       self)
         self.states['move'] = creature_states.Moving(self.animations['move'],
-                                                                self.anim_speed)
+                                                     self.anim_speed,
+                                                     self)
         self.state = self.states['idle']
 
         self.speed = 10

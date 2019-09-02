@@ -153,6 +153,7 @@ class Move(Action):
                     self._owner.move(butt.iso_pos)
                     self.end()
                     handled = True
+                    break
         
         return handled
 

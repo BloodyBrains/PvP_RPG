@@ -41,18 +41,7 @@ class Player(creatures.Creature):
         self.anim_speed = 8 #Num of game render cycles between animation frames
                             #   at 30 FPS
         '''
-        self.states = {}
-        self.states['idle'] = creature_states.IdleState(self.animations['idle'],
-                                                        self.anim_speed)
-        self.states['attack'] = creature_states.AttackState(self.animations['attack'],
-                                                          self.anim_speed)
-        #self.states['hurt'] = creature_states.HurtState(self.animations['hurt'],
-        #                                                self.anim_speed)
-        self.states['die'] = creature_states.DieState(self.animations['die'],
-                                                       self.anim_speed)
-        self.states['moving'] = creature_states.Moving(self.animations['move'],
-                                                        self.anim_speed)
-        self.state = self.states['idle']
+        
 
         #self.width = self.animations['idle'][0].get_width()
         #self.height = self.animations['idle'][0].get_height()
@@ -74,7 +63,7 @@ class Player(creatures.Creature):
 
 
     def on_event(self, event):
-        temp = self.states[self.state.on_event(event)]
+        temp = self.states[event]
         if temp != self.state:
             self.prev_state = self.state
             self.state = temp
