@@ -1,0 +1,5 @@
+Goal - Kill the enemy summoner
+
+2) Summon autonomous creatures
+
+3) Sports-like: swap players out

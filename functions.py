@@ -2,6 +2,8 @@
 """ A group of commonly used functions
 """
 
+from pygame import font
+
 import camera
 import constants
 
@@ -21,10 +23,6 @@ def iso_to_cart(iso_pos, width=0, height=0, with_offset=0):
     cart_x = (iso_pos[0] * constants.TILE_W_HALF) + (iso_pos[1] * constants.TILE_W_HALF)
     cart_y = (iso_pos[1] * constants.TILE_H_HALF) - (iso_pos[0] * constants.TILE_H_HALF)
 
-    # If we need the camera offset
-    if with_offset != 0:
-        cart_x += camera.offset_x
-        cart_y += camera.offset_y
 
     # adjust position based on sprite size relative to center of tile
     # TO DO: adjust y pos to be slightly below center
@@ -32,4 +30,16 @@ def iso_to_cart(iso_pos, width=0, height=0, with_offset=0):
         cart_x += (constants.TILE_W_HALF - (width / 2))
         cart_y += (constants.TILE_H_HALF - height)
 
+    '''
+    # If we need the camera offset
+    # Fix this: get the game.Battlestate.cam.pos and subtract it from cart_x, cart_y
+    if with_offset != 0:
+        cart_x += camera.Camera.offset_x
+        cart_y += camera.Camera.offset_y
+    '''
+
     return (cart_x, cart_y)
+
+def Draw_Text(text, x, y, surface):
+    label = font.render(text, 1, (75,25,0))
+    surface.blit(label, (x, y))

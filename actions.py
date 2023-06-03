@@ -1,23 +1,36 @@
 # actions.py
 """Actions an agent can perform
 
-Returns:
-    [type] -- [description]
 """
 import abc
 import os
 
 import pygame
 
+import input
+
 import buttons
 import camera
 import constants
+import events
 from functions import iso_to_cart
 
 
-class Action:
-    def __init__(self, owner):
+def register(id, *args):
+    ev = []
+    for i in args:
+        ev.append(i)
+    user = dict(id, ev)
+
+    post("new_register", user)
+
+
+HOOKS = {}
+
+class Action(abc.ABC):
+    def __init__(self, owner, event_manager):
         self._owner = owner
+        self.ev_mgr = event_manager
         self.is_drawing = False
 
     @abc.abstractmethod
@@ -36,13 +49,26 @@ class Action:
         pass
 
     @abc.abstractmethod
+    def update(self): pass
+
+    @abc.abstractmethod
     def run(self): pass
 
     @abc.abstractmethod
     def end(self): pass
 
     @abc.abstractmethod
-    def draw(self, game_win): pass
+    def handle_input(self, event, *args): 
+        """Called from game_states.BattleState.update to handle user
+            input events that are specific to the Action.
+            
+            Arguments:
+                event {pygame.event} -- pygame event
+        """
+        pass
+
+    @abc.abstractmethod
+    def draw(self, game_win, cam_pos): pass
 
     @abc.abstractmethod
     def check_click(self, mouse_pos): pass
@@ -58,24 +84,36 @@ class Move(Action):
     tile_img = pygame.image.load(os.path.join(constants.ASSETS, 'move_tile.png'))
     #tile.set_alpha(100)
     ID = 'move'
+    events_to_handle = (constants.EV_MOUSE_CLICK)
 
-    def __init__(self, owner):
-        super().__init__(owner)
+    @staticmethod
+    def check_reqs(owner):
+        print(str(owner.has_moved))
+        return not owner.has_moved
+
+    hook = {ID: check_reqs}
+
+    def __init__(self, owner, event_manager):
+        super().__init__(owner, event_manager)
+        events.register_listener(self, self.events_to_handle)
+       # event_manager.register_listener(self)
+        
         self.valid_moves = None     #List of tiles the agent can move to (cartesian)
+        self.iso_tiles = None       #List of iso tiles the player can move to
         self.selected_tile = None   #Tile the agent needs to move to
-        self.has_moved = False          #Set True after agent moves
-        self.tile_buttons = []    #List of buttons for all tiles in valid_moves
+        self.has_moved = False      #Set True after agent moves
+        self.tile_buttons = []      #List of buttons for all tiles in valid_moves
         self.first_pos = (0, 0)     #Move along the isometric x row
         self.distance1 = 0
         self.distance2 = 0
         self.second_pos = (0, 0)    #Move along the isometric y column
         self.slope = 0
 
-    def check_reqs(self):
-        return not self.has_moved
 
     def start(self):
         self._get_move_tiles()
+
+    def update(self): pass
 
     def run(self):
         """ Moves the agent to the selected tile in two moves (if neccessary)
@@ -104,15 +142,35 @@ class Move(Action):
                            self._owner.pos[1] + ((constants.SLOPE_MOVE[1] * constants.MOVE_SPEED) * direction))
                 self.distance2 -= abs(self._owner.pos[0] - new_pos[0])
                 self._owner.pos = new_pos
-                if self.distance2 <= 0: #we moved to the first position
+                if self.distance2 <= 0: #we moved to the final position
+                    self._owner.iso_pos = self.selected_tile
+                    self._owner.pos = iso_to_cart(self._owner.iso_pos, self._owner.width, self._owner.height, with_offset=1)
                     self.selected_tile = None
+                    self.end()
                     distance2 = 0
 
-    def end(self): pass       
+    def end(self):
+        self._owner.end_action()
+        self.ev_mgr.post(events.ActionEnd())
+        pygame.event.post(pygame.event.Event(input.ACTION_END))
 
-    def draw(self, game_win):
+    def handle_input(self, event, *args):
+        handled = False
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = args[0]
+            for butt in self.tile_buttons:
+                if butt.rect.collidepoint(mouse_pos):
+                    print("clicked on move tile!")
+                    self._owner.move(butt.iso_pos)
+                    self.end()
+                    handled = True
+                    break
+        
+        return handled
+
+    def draw(self, game_win, cam_pos):
         for but in self.tile_buttons:
-            but.draw(game_win)
+            but.draw(game_win, cam_pos)
 
     def check_click(self, mouse_pos):
         """ Checks if a tile has been clicked on to move to.
@@ -149,7 +207,7 @@ class Move(Action):
         """
         # TO DO: check if tiles can be moved to
         self.valid_moves = []
-        iso_tiles = []
+        self.iso_tiles = []
         '''
          Assemble list of all valid tiles the agent can move to.
          Outer loop starts with the most negative valid x pos.
@@ -166,17 +224,17 @@ class Move(Action):
         y = -(self._owner.move_amount - abs(x))
         while x <= self._owner.move_amount:
             while y <= (self._owner.move_amount - abs(x)):
-                iso_tiles.append((self._owner.iso_pos[0] + x, self._owner.iso_pos[1] + y))
+                self.iso_tiles.append((self._owner.iso_pos[0] + x, self._owner.iso_pos[1] + y))
                 y += 1
             x += 1
             y = -(self._owner.move_amount - abs(x))
 
-        for tile in iso_tiles:
-            self.valid_moves.append(iso_to_cart(tile, with_offset=1))
+        for tile in self.iso_tiles:
+            self.valid_moves.append(iso_to_cart(tile))
 
-        self.make_move_buttons(iso_tiles) #Use the iso_tiles to make button ids
+        #self.make_move_buttons(iso_tiles) #Use the iso_tiles to make button ids
 
-    def make_move_buttons(self, tiles):
+    def make_move_buttons(self):
         """Makes a list of buttons.Button objects from 'tiles' that can be
             clicked on
             
@@ -193,10 +251,39 @@ class Move(Action):
             p4 = (tile[0] + constants.TILE_W_HALF, tile[1] + constants.TILE_HEIGHT)
             poly = [p1, p2, p3, p4]
 
-            self.tile_buttons.append(buttons.ButtonTile(str(tiles[i]),
+            self.tile_buttons.append(buttons.ButtonTile(str(self.iso_tiles[i]),
                                                     sprite=self.tile_img,
-                                                    pos=(tile[0], tile[1]),
-                                                    iso_pos=tiles[i],
+                                                    pos=tile,
+                                                    iso_pos=self.iso_tiles[i],
                                                     polygon=poly))
             i += 1
+
+
+    def adjust_positions(self, cam_pos):
+        i = 0
+        for tile in self.valid_moves:
+            x = tile[0] - cam_pos[0]
+            y = tile[1] - cam_pos[1]
+            self.valid_moves[i] = (x, y)
+            i += 1
+
+HOOKS["move"] = Move.check_reqs
+
+
+#---------------------------------------------------------------------------------------
+def get_action(action_id, owner, event_manager):
+    """Creates and returns an Action instance
+
+    Args:
+        action_id (_type_): _description_
+        owner (_type_): _description_
+        event_manager (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    if action_id == 'move':
+        return Move(owner, event_manager)
+    else:
+        print("error: no actions.Action: ", action_id)
 

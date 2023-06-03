@@ -1,0 +1,51 @@
+TO DO:
+Mouse clicks need to be checked for left of right button
+
+Any objects that call events.register_event(), should be forced (through
+    inheritance??) to implement notify()
+
+In lieu of resource_manager.get_sprites_from_sheet(), try working straight from the sheets 
+
+Calling set_colorkey(BLACK) is causing issues with the background images
+
+*Eliminate agent positions entirely, use only rects. Their positions will be
+    agent.rect.topleft
+
+Currently, events are events.Event class instances that are passed to post() and notify().
+    It could be more efficient if they were simply global constants. If additional info
+    is needed (eg mouse_pos on a MOUSE_CLICK event) we could pass it along as a *kwarg
+
+Change game_state ids to constants
+
+Implement game_state stack (or circular queue) to allow back and forward state transitions
+
+Switch to vectors for movement
+
+*Look into pygame (or SDL, openGL) culling.
+
+Update() calls need to run on a delta time to achieve a real-time updating that doesn't 
+    change depending on the machine that is running it
+
+*Faster tile_grid blitting-- Blit all of the tiles to one surface and then draw the surface
+    on draw()
+
+*Use dirty rects- Blit a piece of the background over the sprite's current location, erasing it.
+    Append the sprite's current location rectangle to a list called dirty_rects.
+    Move the sprite.
+    Draw the sprite at it's new location.
+    Append the sprite's new location to my dirty_rects list.
+    Call display.update(dirty_rects)
+
+Make transition for Camera.center(). Have it gradually move to new position.
+
+Improvement: Have components (eg. Actions, Pop-up Menus) register as
+                listeners to the game_state along with the type of input event/s they're
+                listening for. Then, simply loop through registered listeners calling
+                handle_event(event)
+
+Change Creature.states to a list of creature_states.ids. There should be only one instance 
+    of a creature_state at a given time, referenced by Creature.state
+
+Fix hardcoded state ids to constants
+
+Make sure notify() is returning a stop flag when necessary

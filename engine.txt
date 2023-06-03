@@ -1,0 +1,36 @@
+MAIN()
+    init pygame
+    load assets
+    create game components
+    RUN()
+        UPDATE()
+            
+
+GameState:
+    internal_state: open, action
+    change_state(state_id): return internal_state
+        exit_state()
+        enter_state()
+        run_state()
+    update():
+        get_events()
+        handle_events()
+        run_state()
+
+GS.open
+    on_enter()
+        get the active agent
+            check active_agent action requirements
+                if no actions
+                    get next agent
+                    init agents turn
+                    append next turn
+                    
+                assemble turn menu
+                center cam on agent
+                move selected tile
+GS.update()
+    check for quit
+    get pygame events list
+
+                    
