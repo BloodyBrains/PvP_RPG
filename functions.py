@@ -2,6 +2,8 @@
 """ A group of commonly used functions
 """
 
+from pygame import font
+
 import camera
 import constants
 

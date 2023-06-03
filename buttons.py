@@ -45,6 +45,10 @@ class Button():
         new_y = self.pos[1] + camera.offset_y
         self.pos = (new_x, new_y)
 
+    def action(self):
+        """Action the button takes when clicked"""
+        print('\nButton has not overridden Button.action()')
+
     def draw(self, win):
         win.blit(self.sprite, self.pos)
 
@@ -59,6 +63,22 @@ class Button():
 
     def __str__(self):
         return self.ID
+    
+class RosterButton(Button):
+    def __init__(self, ID, sprite=None, width=0, height=0, pos=(0, 0), text=None):
+        super().__init__(ID, sprite, width, height, pos, text)
+        self.name_tag = pygame.font.Font('freesansbold.ttf', 14)
+        self.text_str= self.name_tag.render(self.text, True, constants.WHITE, (0, 0, 0))
+        self.text_rect = self.text_str.get_rect()
+        self.text_rect.center = ((self.pos[0] + (self.rect.width / 2)),
+                                 (self.pos[1] + self.rect.height))
+
+    def action(self):
+        '''
+        change 'selected_creature' to self
+        display 'info_tag'
+        '''
+        pass
 
 
 class ButtonTile(Button):

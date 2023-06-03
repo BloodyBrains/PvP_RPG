@@ -7,12 +7,14 @@
 #        Make a list of texts that need to be displayed along with their
 #               positions. Append them as needed and render all during
 #               draw()
+#        Make game states a stack
+#        Move game state constants from game_control to game_states
 #        Consolidate actions.Move._get_move_tiles and make_move_buttons
 #               into one.
 #        Change all class 'id' attributes to 'ID' to avoid conflicts
 #        Make an Agent base class for Creatures and Player to derive from
 #        Use pygame sprite groups, layered updates and dirty sprites to 
-#           improve perform
+#           improve performance
 #        How to update cartesian positions for camera movement (CRITICAL)         
 #        Change the way creatures move from using self.pos to sprite.rect (CRITICAL)
 #           Or, use pygame.math.vector2 (should help with moving)
@@ -41,8 +43,11 @@ import math
 import pygame
 pygame.init()
 pygame.font.init()
+import setup
+
 
 #import server
+import assets
 import buttons
 import camera
 import constants
@@ -52,19 +57,20 @@ import creature_states
 import events
 import game_control
 import game_states
+import input
 import iso_grid
 #import network
 import player
 
+#assets.load_assets()
+
 
 def main():
     # SETUP /////////////////////////////////////////////////////////////////// 
-    clock = pygame.time.Clock()
-    win = pygame.display.set_mode((constants.SCREEN_WIDTH, constants.SCREEN_HEIGHT))
-
-    ev_mgr = events.EventManager()
-    cam = camera.Camera(ev_mgr)
-    game = game_control.Game(ev_mgr, clock, win, cam)
+    
+    #!!!game = game_control.Game(ev_mgr, clock, win, cam)
+    
+    game = game_control.Game()
     
     
 

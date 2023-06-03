@@ -1,23 +1,38 @@
 # game_states.py
+''' TO DO: Move TurnMenu to a 'menus' module'''
+
 import abc
 import math
 import os
 
 import pygame
 
+import input
+
 import actions
 import assets
-from buttons import Button # _HACK!!! avoids name conflict with <GameState>.buttons attribute
+from buttons import Button, RosterButton # _HACK!!! avoids name conflict with <GameState>.buttons attribute
 import camera
 import constants
 import creatures
 import events
 from functions import iso_to_cart
 import iso_grid
-import player
+import player 
+
+
+
+
+STATE_START = 'start_screen'
+STATE_EDIT = 'roster_edit'
+STATE_BATTLE = 'battle_screen'
 
 
 class GameState(abc.ABC):
+    def __init__(self, name) -> None:
+        super().__init__()
+        self.name = name
+
     @abc.abstractmethod
     def update(self): pass
 
@@ -26,6 +41,9 @@ class GameState(abc.ABC):
 
     @abc.abstractmethod
     def on_enter(self): pass
+
+    @abc.abstractmethod
+    def on_exit(self): pass
 
     @abc.abstractmethod
     def notify(self, event):
@@ -38,6 +56,9 @@ class GameState(abc.ABC):
         """
         pass
 
+    @abc.abstractmethod
+    def transition(self, next_state): pass
+
     def __repr__(self):
         return self.__str__()
 
@@ -49,18 +70,24 @@ class StartScreen(GameState):
     """State to handle update and and render logic when the
         start screen is active
     """
+    bgr_sprite = assets.startstate_sprites['bgr'] #images['bgr']
+    play_button_sprite = assets.startstate_sprites['play'] 
+    listen_events = (pygame.MOUSEBUTTONDOWN, )
+    linked_states = [STATE_START]
 
-    def __init__(self, images, event_manager, game):
-        self.bgr = images['bgr']
-        self.ev_mgr = event_manager
-        event_manager.register_listener(self)
-        self.game = game
+    def __init__(self, name):
+       # self.ev_mgr = event_manager
+        events.register_listener(self, StartScreen.listen_events)
+        super().__init__(name)
+        #events.register_callback(self, pygame.MOUSEBUTTONDOWN, self.handle_clicks)
+        #self.game = game
 
         self.buttons = {}
-        self.buttons['play'] = Button('play_button', images['play'])
-        self.buttons['play'].pos = [((constants.SCREEN_WIDTH / 2) 
-                                     - (self.buttons['play'].sprite.get_width() / 2)),
-                                    (constants.SCREEN_HEIGHT / 2)]
+        self.buttons['play'] = Button('play_button', StartScreen.play_button_sprite)
+        self.buttons['play'].pos = [
+            ((constants.SCREEN_WIDTH / 2) - (self.buttons['play'].sprite.get_width() / 2)),
+            (constants.SCREEN_HEIGHT / 2)
+        ]
         self.buttons['play'].rect = pygame.Rect(self.buttons['play'].pos,
                                                (self.buttons['play'].rect.width,
                                                 self.buttons['play'].rect.height))
@@ -68,9 +95,14 @@ class StartScreen(GameState):
         self.visibles = []
         #asdf = [self.buttons['play'].sprite, self.buttons['play'].pos]
         self.visibles.append(self.buttons['play'])
+        self.transition_to = None
 
 
     def update(self):
+        if self.transition_to:
+            return self.transition_to
+        
+        '''
         for event in pygame.event.get():
             ev = ''
             #Check for QUIT--------------------------------------------------
@@ -85,29 +117,53 @@ class StartScreen(GameState):
                     if button.rect.collidepoint(pos):
                         if button.ID == 'play_button':
                             self.game.change_state('roster_edit')
+        '''
 
 
     def draw(self, game_win):
-        game_win.blit(self.bgr, (0, 0))
+        game_win.blit(StartScreen.bgr_sprite, (0, 0))
 
         for visible in self.visibles:
             visible.draw(game_win)
 
-    def notify(self, event):
-        pass
+    def notify(self, event, **event_data):
+        if event == pygame.MOUSEBUTTONDOWN: #constants.EV_MOUSE_CLICK:
+            self.handle_clicks(event_data['event_data'])
+        else: print(str(self), ' received notification for ', str(event))
 
     def on_enter(self):
-        pass        
+        pass 
+
+    def on_exit(self):
+        events.unregister_listener(self, StartScreen.listen_events)
+
+    def handle_clicks(self, mouse_pos):
+        for button in self.buttons.values():
+             if button.rect.collidepoint(mouse_pos):
+                if button.ID == 'play_button':
+                    self.on_exit()
+                    self.transition_to = STATE_EDIT
+                    ev = pygame.event.Event(events.CHANGE_STATE, info=STATE_EDIT)
+                    pygame.event.post(ev)
+
+    def transition(self, next_state): pass
+        
+                
+
+
 
 
 class RosterEdit(GameState):
     '''Game State for "Creature Edit Screen"'''
 
+    listen_events = (pygame.MOUSEBUTTONDOWN, )
+    linked_states = [STATE_START, STATE_BATTLE]
+
     offset = 10 # space between sprites in roster rect area
     
     total_positions = 0
     thumb_positions = [] # list of Rect's for sprite positions in roster rect
-    roster_buttons = [] # list creature buttons in roster rect
+    #roster_buttons = [] # list creature buttons in roster rect
 
     # roster_rect is the border that surrounds the creature selection area
     roster_rect_x = math.floor(constants.SCREEN_WIDTH * 0.1)
@@ -127,24 +183,40 @@ class RosterEdit(GameState):
                                 constants.CREATURE_W,
                                 constants.CREATURE_H)
     
+    bgr_sprite = assets.rosteredit_sprites['bgr']
+    play_button_sprite = assets.rosteredit_sprites['play']
 
-    def __init__(self, images, player, event_manager, game):
-        self.bgr = images['bgr']
+    #for rendering text
+    font = pygame.font.Font('freesansbold.ttf', 20)
+    
+    
+    
+
+    def __init__(self, name, player_roster):
+        super().__init__(name)
+        #self.bgr = images['bgr']
         #cls.roster.update({'chaos':player.roster['chaos'].animations['idle'][1],
         #                   'air':player.roster['air'].animations['idle'][1]})
-        self.player = player
+        #self.player = player
+        self.text_str = ''
+        self.text = RosterEdit.font.render(self.text_str, True, constants.GREEN, constants.BLUE)
+        self.text_rect = self.text.get_rect()
+        self.text_rect.center = (200, 200)
+        self.transition_to = None
         self.selected = 'chaos' # id of creature currently selected for edit
-        self.ev_mgr = event_manager
-        event_manager.register_listener(self)
-        self.game = game
-        self.roster = {} # dict of pygame.surfaces for all creatures owned by player
+        events.register_listener(self, RosterEdit.listen_events)
+        #self.ev_mgr = event_manager
+        #event_manager.register_listener(self)
+        #events.register_callback(self, pygame.MOUSEBUTTONDOWN, self.handle_clicks)
+       # self.game = game
+        self.roster = player_roster # dict of pygame.surfaces for all creatures owned by player
         self.visibles = [] #<NOT FULLY IMPLEMENTED> list of [surface, pos] of images to render
         #vis = [cls.roster[cls.selected], cls.selected_rect.topleft]
         #cls.visibles.append(vis)
         self.thumb_positions = []
         
         self.buttons = {}
-        self.buttons['play'] = Button('play_button', images['play'])
+        self.buttons['play'] = Button('play_button', RosterEdit.play_button_sprite)
         self.buttons['play'].pos = (
                 (0, constants.SCREEN_HEIGHT - self.buttons['play'].rect.height))
         
@@ -152,34 +224,78 @@ class RosterEdit(GameState):
                 (0, constants.SCREEN_HEIGHT - self.buttons['play'].rect.height),
                 (self.buttons['play'].rect.width, self.buttons['play'].rect.height))
 
-        self.roster_buttons = [] # list of buttons to edit/view creature stats
+        #self.roster_buttons = [] # list of buttons to edit/view creature stats
+        self.roster_buttons = {}
+        self.set_thumb_positions()  
+        self.set_roster_buttons()
 
-        self.set_thumb_positions()    
 
 
     def set_roster_buttons(self):
         """Creates buttons for each creature in the player's roster
         """
+        '''
         i = 0
-        for name in self.player.roster_ids:
+        for (n, name), (t, thumb) in zip(self.roster[0].items(), self.roster[1].items()):
             self.roster_buttons.append(Button(name,
-                                             self.player.get_roster_thumbs(name),
-                                             pos=self.thumb_positions[i],
-                                             text=name))
+                                              thumb,
+                                              pos=self.thumb_positions[i],
+                                              text=name))
+            i += 1
+        '''
+        i = 0
+        for name in self.roster:
+            self.roster_buttons[name] = RosterButton(self.roster[name].name,
+                                              sprite = self.roster[name].animations['idle'][0],
+                                              pos = self.thumb_positions[i],
+                                              text = self.roster[name].name)
             i += 1
 
     def draw_roster_buttons(self, game_win):
         for button in self.roster_buttons:
             game_win.blit(button.sprite, button.pos)
+            game_win.blit('heloo', RosterEdit.text_rect)
 
-    def notify(self, event):
-        pass
+    def notify(self, event, **event_data):
+        if event == pygame.MOUSEBUTTONDOWN: #constants.EV_MOUSE_CLICK:
+            self.handle_clicks(event_data['event_data'])
+        else: print(str(self), ' received notification for ', str(event))
+
 
     def on_enter(self):
         """Called from game_control.py when state is entered to update changes
         """
         self.set_thumb_positions()
         self.set_roster_buttons()
+
+    def on_exit(self):
+        events.unregister_listener(self, RosterEdit.listen_events)
+
+
+    def handle_clicks(self, mouse_pos):
+        '''
+        for button in self.buttons.values():
+             if button.rect.collidepoint(mouse_pos):
+                if button.ID == 'play_button':
+                    self.on_exit()
+                    self.transition_to = STATE_BATTLE
+        '''
+        for button in self.buttons.values():
+             if button.rect.collidepoint(mouse_pos):
+                if button.ID == 'play_button':
+                    self.on_exit()
+                    self.transition_to = STATE_BATTLE
+                    ev = pygame.event.Event(events.CHANGE_STATE, info=STATE_BATTLE)
+                    pygame.event.post(ev)
+                    return True
+                
+        for button in self.roster_buttons.values():
+            if button.rect.collidepoint(mouse_pos):
+                button.action()
+                self.selected = button.ID
+                return True
+
+    def transition(self): pass
 
     def set_thumb_positions(self):
         '''Sets the thumbnail position of all the players creatures in "roster"'''
@@ -198,11 +314,13 @@ class RosterEdit(GameState):
         
 
     def update(self):
+        if self.transition_to:
+            return self.transition_to
+        '''
         for event in pygame.event.get():
             ev_handled = False
             if event.type == pygame.QUIT:
-                ev = events.QuitEvent()
-                self.ev_mgr.post(ev)
+                self.ev_mgr.post(events.QuitEvent())
                 return
             # Check for clicks----------------------------------------------
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -222,33 +340,62 @@ class RosterEdit(GameState):
                             print(button.ID)
                             if button.ID == 'play_button':
                                 self.game.change_state('battle_screen')
+        '''
 
     def draw(self, game_win):
-        game_win.blit(self.bgr, (0, 0))
+        game_win.blit(self.bgr_sprite, (0, 0))
 
         # draw rect that borders "creature edit buttons"
         pygame.draw.rect(game_win, (255, 255, 255), self.roster_rect, 5)
         pygame.draw.rect(game_win, (255, 255, 255), self.selected_rect, 5)
 
-        # draw play button 
-        game_win.blit(self.buttons['play'].sprite, self.buttons['play'].pos)
+        # draw play button
+        for button in self.buttons.values():
+            button.draw(game_win) 
+        #game_win.blit(self.buttons['play'].sprite, self.buttons['play'].pos)
+
+        # draw roster buttons
+        for button in self.roster_buttons.values():
+            button.draw(game_win)
+            #self.text_str = button.ID
+            game_win.blit(button.text_str, button.text_rect)
 
         #cls.draw_creatures(game_win)
-        self.draw_roster_buttons(game_win)
+        #self.draw_roster_buttons(game_win)
 
         # draw selected creature <_HACK!!!!!!!!!!!!!>
-        game_win.blit(self.player.roster[self.selected].animations['idle'][0],
+        game_win.blit(self.roster[self.selected].animations['idle'][0],
                       self.selected_rect.topleft)
-
+        #game_win.blit(self.roster[1][self.selected],
+        #              self.selected_rect.topleft)
         #for i in cls.visibles:
             #game_win.blit(i[0], i[1])
 
 
 class BattleScreen(GameState):
-    bgr = None #pygame.image.load(os.path.join(constants.ASSETS, 'nebula_bgr.png'))
+    #bgr = None #pygame.image.load(os.path.join(constants.ASSETS, 'nebula_bgr.png'))
+    '''
+    Active Agent = agent whose turn it currently is.
+    Selected Agent = agent on the field who's selected for inspection
+    Selected Tile = highlighted grid tile on the selected agent.
+    Turn Menu = menu displayed when selected agent is the active agent 
+                that shows available actions the agent can take. Populated
+                with buttons that create Actions for the active agent.
+    Actions = control the state of agents when performing actions such as
+              moving to new tile, attacking, etc. Anything that initiates
+              a sequence of events that spans multiple update loops
+                
+    Turn Action = The Action object that handles '''
+    bgr = assets.battlestate_sprites['bgr']
+    tile_selected = assets.battlestate_sprites['tile_selected']
+    listen_types = [
+        constants.EV_AGENT_CLICKED,
+        #constants.EV_CAM_MOVE,
+        constants.EV_ACTION_END
+    ]
     player1 = None
     player2 = None
-    tile_selected = None #pygame.image.load(os.path.join(constants.ASSETS, 'tile_selected.png'))
+    #tile_selected = None #pygame.image.load(os.path.join(constants.ASSETS, 'tile_selected.png'))
     tile_selected_pos = (0, 0)
 
     # action buttons for the active turn menu
@@ -269,21 +416,19 @@ class BattleScreen(GameState):
     ACTION = 1
 
 
-    def __init__(self, images, player1, player2, event_manager, game): 
-        self.bgr = images['bgr']
-        self.tile_selected = images['tile_selected']
+    def __init__(self, name, player1, player2, cam, battle_grid): 
+        super().__init__(name)
+        #self.bgr = images['bgr']
+        #self.tile_selected = images['tile_selected']
         self.player1 = player1
         self.player2 = player2
-        self.ev_mgr = event_manager
-        self.listen_types = [
-            constants.EV_AGENT_CLICKED,
-            constants.EV_CAM_MOVE,
-            constants.EV_ACTION_END
-        ]
-        event_manager.register_listener(self, self.listen_types)
-        self.game = game
-        self.cam = self.game.cam
+        #self.ev_mgr = event_manager
+        
+        events.register_listener(self, self.listen_types)
+        #self.game = game
+        self.cam = cam
         self.internal_state = self.OPEN
+        self.iso_grid = battle_grid
         self.turn_action = None # Reference to the action the active_agent is performing
         self.cam_speed_x = 0 # Number of pixels cam moves per update call. Set to 0 when
                              #     cam is not moving
@@ -295,14 +440,16 @@ class BattleScreen(GameState):
                 listeners to the game_state along with the type of input event/s they're
                 listening for. Then, simply loop through registered listeners calling
                 handle_event(event)
+
+            Move event checking to EventManager and call
         '''
         
+        '''
         #CHECK FOR EVENTS------------------------------------------------------------------
         for event in pygame.event.get():
             #Check for QUIT
             if event.type == pygame.QUIT:
-                ev = events.QuitEvent()
-                self.ev_mgr.post(ev)
+                self.ev_mgr.post(events.QuitEvent())
                 return
 
             #Check for Keys---------------------------------------------------
@@ -314,57 +461,34 @@ class BattleScreen(GameState):
                 #Check for Arrow Keys
                 if event.key == pygame.K_LEFT:
                     self.cam.x_speed = -constants.CAM_SPEED
-                    #self.iso_grid.x_speed = constants.CAM_SPEED
-                    #for agent in self.agents.values():
-                    #    agent.x_speed = constants.CAM_SPEED
                     continue
                 elif event.key == pygame.K_RIGHT:
                     self.cam.x_speed = constants.CAM_SPEED
-                    #self.iso_grid.x_speed = -constants.CAM_SPEED
-                    #for agent in self.agents.values():
-                    #    agent.x_speed = -constants.CAM_SPEED
                     continue
 
                 if event.key == pygame.K_UP:
                     self.cam.y_speed = -constants.CAM_SPEED
-                    #self.iso_grid.y_speed = constants.CAM_SPEED
-                    #for agent in self.agents.values():
-                    #    agent.y_speed = constants.CAM_SPEED
                     continue               
                 elif event.key == pygame.K_DOWN:
                     self.cam.y_speed = constants.CAM_SPEED
-                    #self.iso_grid.y_speed = -constants.CAM_SPEED
-                    #for agent in self.agents.values():
-                    #    agent.y_speed = -constants.CAM_SPEED
                     continue
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
                     self.cam.x_speed = 0
-                    #self.iso_grid.x_speed = 0
-                    #for agent in self.agents.values():
-                    #    agent.x_speed = 0
                     continue
                 elif event.key == pygame.K_RIGHT:
                     self.cam.x_speed = 0
-                    #self.iso_grid.x_speed = 0
-                    #for agent in self.agents.values():
-                    #    agent.x_speed = 0
                     continue
 
                 if event.key == pygame.K_UP:
                     self.cam.y_speed = 0
-                    #self.iso_grid.y_speed = 0
-                    #for agent in self.agents.values():
-                    #    agent.y_speed = 0
                     continue
                 elif event.key == pygame.K_DOWN:
                     self.cam.y_speed = 0
-                    #self.iso_grid.y_speed = 0
-                    #for agent in self.agents.values():
-                    #    agent.y_speed = 0
-                    continue            
-        
+                    continue  
+        '''          
+        '''
             # Check for clicks------------------------------------------------
             if event.type == pygame.MOUSEBUTTONDOWN:
                 screen_pos = pygame.mouse.get_pos() # For clicks on HUD objects relative to camera
@@ -381,7 +505,7 @@ class BattleScreen(GameState):
                     handled = False
                     for button in self.turn_menu.buttons.values():
                         if button.rect.collidepoint(screen_pos):
-                            '''
+                            
                             We need to instantiate the Action instance now rather than
                                 in the agents constructor
                             set the active_agents action to selected action
@@ -389,7 +513,7 @@ class BattleScreen(GameState):
                             set internal state to action state
                             init the action
                             deactivate turn menu
-                            '''
+                            
                             self.turn_action = actions.get_action(button.ID, self.active_agent, self.ev_mgr)
                             self.active_agent.start_action(self.turn_action)
                             #self.turn_action = self.active_agent.start_action(button.ID)
@@ -425,8 +549,9 @@ class BattleScreen(GameState):
                         #else:
                         #    print('game_state.BattleState has no internal state: ', self.internal_state)
                 #-------------------------------------------------------------------------------
-            
-                '''
+        '''
+
+        '''
                 #Check if BattleScreen button is clicked----------------------------------------                
                 for button in cls.buttons.values():
                     if button.rect.collidepoint(pos):
@@ -434,7 +559,7 @@ class BattleScreen(GameState):
                         if button.id == 'play_button':
                             return 'battle_screen'
                 #-------------------------------------------------------------------------------
-                '''
+        
                 
                 #Check if turn_menu button is clicked-------------------------------------------
                 # Must have clicked on unoccupied tile
@@ -442,7 +567,8 @@ class BattleScreen(GameState):
                 self.internal_state = self.OPEN
                 #-------------------------------------------------------------------------------
 
-                '''
+        '''
+        '''
                 # Check for Action clicks------------------------------------------------------
                 if not click_handled:
                     if cls.active_agent.action is not None:
@@ -450,9 +576,9 @@ class BattleScreen(GameState):
                 else:
                     break
                 #-------------------------------------------------------------------------------
-                '''
+        '''
         #-----------------------------------------------------------------------------------------------
-
+        
 
         self.cam.update()
         self.iso_grid.update()
@@ -589,8 +715,11 @@ class BattleScreen(GameState):
 
         # Instantiate the turn menu
         #self.cam = camera.Camera(self.ev_mgr, self.game)
-        self.iso_grid = iso_grid.IsoGrid(self.ev_mgr)
-        self.turn_menu = TurnMenu(self.ev_mgr)
+        self.cam.activate()
+        #self.iso_grid = iso_grid.IsoGrid(self.ev_mgr)
+        
+        #self.turn_menu = TurnMenu(self.ev_mgr)
+        self.turn_menu = TurnMenu()
         #cls.turn_menu.add_buttons('move')
 
         # Create the two players
@@ -610,7 +739,8 @@ class BattleScreen(GameState):
         self.player2.rect = pygame.Rect(self.player2.pos, (self.player2.width, self.player2.height))
 
         for agent in self.agents.values():
-            self.ev_mgr.register_listener(agent, agent.listen_types)
+            #self.ev_mgr.register_listener(agent, agent.listen_types)
+            events.register_listener(agent, agent.listen_types)
 
         # Set starting positions of players creatures
         '''
@@ -649,8 +779,12 @@ class BattleScreen(GameState):
         #cls.active_agent.on_event('move')
         #cls.active_agent.take_turn()
 
-    def make_turn_menu(self, items): 
-        cls.turn_menu.make(items)        
+    def on_exit(self): pass
+
+    def transition(self, next_state): pass
+
+    def make_turn_menu(self, items): pass
+       # cls.turn_menu.make(items)        
 
 
     # General Purpose Methods -------------------------------------------
@@ -700,18 +834,21 @@ class TurnMenu:
     button_width = button_blank.get_width()
     button_height = button_blank.get_height()
     pos = (100, 370)
+    listen_types = [
+        constants.EV_MOUSE_CLICK
+    ]
     buttons = {}
     is_active = False
 
-    def __init__(self, event_manager):
-        self.ev_mgr = event_manager
-        self.listen_types = [
-            constants.EV_MOUSE_CLICK
-        ]
-        event_manager.register_listener(self)        
+    def __init__(self):
+        #self.ev_mgr = event_manager
+        
+        #event_manager.register_listener(self)
+
+        pass
 
     def activate(self, items):
-        self.ev_mgr.register_listener(self)
+        events.register_listener(self, TurnMenu.listen_types)
         self.buttons = {}
         i = 0
         for item in items:

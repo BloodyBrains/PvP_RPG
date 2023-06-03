@@ -144,7 +144,7 @@ class Moving(State):
                 y = -(self.direction1 * (constants.SLOPE_MOVE[1] * constants.MOVE_SPEED))
                 self.owner.rect.move_ip(x, y)
                 self.owner.pos = self.owner.rect.topleft
-                self.distance1 -= x
+                self.distance1 -= abs(x)
             else:
                 print(self.owner.rect.topleft, self.owner.rect.center)
                 self.owner.rect.topleft = iso_to_cart(self.first_pos, self.owner.width, self.owner.height)
@@ -157,15 +157,15 @@ class Moving(State):
                 y = self.direction2 * (constants.SLOPE_MOVE[1] * constants.MOVE_SPEED)
                 self.owner.rect.move_ip(x, y)
                 self.owner.pos = self.owner.rect.topleft
-                self.distance2 -= x
+                self.distance2 -= abs(x)
             else:
                 print(self.owner.rect.topleft, self.owner.rect.center)
                 self.owner.rect.topleft = iso_to_cart(self.dest, self.owner.width, self.owner.height)
                 print(self.owner.rect.topleft, self.owner.rect.center)
                 self.owner.pos = self.owner.rect.topleft
-
-
-        
+                self.owner.iso_pos = self.dest
+                # return 'prev'
+                self.owner.end_action()        
 
     def on_event(self, event):
         if event == 'prev':
@@ -174,6 +174,10 @@ class Moving(State):
 
 #unused
 class ActiveTurnState(State):
+    def __init__(self):
+        #
+        pass
+    '''
     def __init__(self, animation, anim_speed, owner):
         self.animation = animation
         self.anim_timer = 0
@@ -192,3 +196,4 @@ class ActiveTurnState(State):
     def on_event(self, event):
         if event == 'prev':
             return 'prev'
+    '''

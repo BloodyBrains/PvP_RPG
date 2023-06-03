@@ -81,4 +81,6 @@ def load_assets():
         startstate_sprites[name] = pygame.image.load(path).convert()
         startstate_sprites[name].set_colorkey((0, 0, 0))
 
+load_assets()
+
 

@@ -1,4 +1,9 @@
 TO DO:
+Mouse clicks need to be checked for left of right button
+
+Any objects that call events.register_event(), should be forced (through
+    inheritance??) to implement notify()
+
 In lieu of resource_manager.get_sprites_from_sheet(), try working straight from the sheets 
 
 Calling set_colorkey(BLACK) is causing issues with the background images

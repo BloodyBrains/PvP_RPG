@@ -3,6 +3,11 @@ import os
 
 ASSETS = os.path.join(os.path.dirname(__file__), 'assets')
 
+#RGB for pygame text
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 128)
+
 SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 480
 TILE_WIDTH = 192

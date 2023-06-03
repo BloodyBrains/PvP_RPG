@@ -10,20 +10,24 @@ import pygame
 import assets
 import camera
 import constants
+import events
 
 
 class IsoGrid():
     TILE_WIDTH = 192
     TILE_HEIGHT = 96
 
-    def __init__(self, event_manager):
-        self.ev_mgr = event_manager
-        self.listen_types = []
-        event_manager.register_listener(self, self.listen_types)
+    listen_types = []
+    tiles = assets.grid_tile_sprites
+
+    def __init__(self):
+        #self.ev_mgr = event_manager
+        #self.listen_types = []
+        events.register_listener(self, self.listen_types)
         self.pos = (0, 0)
         self.x_speed = 0
         self.y_speed = 0
-        self.tiles = assets.grid_tile_sprites
+        #self.tiles = assets.grid_tile_sprites
         #self.tiles['dirtsand'] = pygame.image.load(os.path.join(constants.ASSETS, 'tile_sanddirt.png'))
         #iso_tile.set_colorkey((0, 0, 0))
 

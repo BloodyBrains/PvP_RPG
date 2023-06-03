@@ -7,6 +7,8 @@ import os
 
 import pygame
 
+import input
+
 import buttons
 import camera
 import constants
@@ -14,13 +16,21 @@ import events
 from functions import iso_to_cart
 
 
+def register(id, *args):
+    ev = []
+    for i in args:
+        ev.append(i)
+    user = dict(id, ev)
+
+    post("new_register", user)
+
+
 HOOKS = {}
 
-class Action:
+class Action(abc.ABC):
     def __init__(self, owner, event_manager):
         self._owner = owner
         self.ev_mgr = event_manager
-        event_manager.register_listener(self)
         self.is_drawing = False
 
     @abc.abstractmethod
@@ -74,6 +84,7 @@ class Move(Action):
     tile_img = pygame.image.load(os.path.join(constants.ASSETS, 'move_tile.png'))
     #tile.set_alpha(100)
     ID = 'move'
+    events_to_handle = (constants.EV_MOUSE_CLICK)
 
     @staticmethod
     def check_reqs(owner):
@@ -84,9 +95,9 @@ class Move(Action):
 
     def __init__(self, owner, event_manager):
         super().__init__(owner, event_manager)
-        self.events_to_handle = [
-            constants.EV_MOUSE_CLICK
-        ]
+        events.register_listener(self, self.events_to_handle)
+       # event_manager.register_listener(self)
+        
         self.valid_moves = None     #List of tiles the agent can move to (cartesian)
         self.iso_tiles = None       #List of iso tiles the player can move to
         self.selected_tile = None   #Tile the agent needs to move to
@@ -140,8 +151,8 @@ class Move(Action):
 
     def end(self):
         self._owner.end_action()
-        ev = events.ActionEnd()
-        self.ev_mgr.post(ev)
+        self.ev_mgr.post(events.ActionEnd())
+        pygame.event.post(pygame.event.Event(input.ACTION_END))
 
     def handle_input(self, event, *args):
         handled = False
@@ -261,6 +272,16 @@ HOOKS["move"] = Move.check_reqs
 
 #---------------------------------------------------------------------------------------
 def get_action(action_id, owner, event_manager):
+    """Creates and returns an Action instance
+
+    Args:
+        action_id (_type_): _description_
+        owner (_type_): _description_
+        event_manager (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     if action_id == 'move':
         return Move(owner, event_manager)
     else:

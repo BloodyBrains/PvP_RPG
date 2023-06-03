@@ -11,6 +11,7 @@ from resource_manager import get_images_from_sheet
 
 
 # TO DO: check for roster_add invalid parameters
+# get_roster_thumbs, get_roster_ids
 
 SPRITE_W = 96
 SPRITE_H = 80
@@ -21,7 +22,8 @@ class Player(creatures.Creature):
 
     def __init__(self, name, pos=(0, 0), sprite_sheet=None):
         super().__init__(name, pos, sprite_sheet)
-        self.roster = OrderedDict() # dict of all creatures owned
+        self.roster = {} # dict of all creatures owned
+        #self.roster = [] # list of all creatures owned
         self.roster_ids = [] # list of creature id's only
         self.party = {} # dict of creatures in the active party
         self.summons_available = [] # list of creatures available for summoning
@@ -58,8 +60,11 @@ class Player(creatures.Creature):
         # Give the player some creatures. Change later!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         self.requirements['red'] = 1
         self.requirements['white'] = 1
-        self.roster_add(['chaos', creatures.ChaosCreature(sprite_sheet=assets.chaos_sprites['chaos'])],
-                        ['air', creatures.AirCreature(sprite_sheet=assets.air_sprites['air'])])
+        self.roster_add(creatures.ChaosCreature(sprite_sheet = assets.chaos_sprites['chaos'],
+                                                name = 'chaos'),
+                        creatures.AirCreature(sprite_sheet = assets.air_sprites['air'],
+                                              name = 'air')
+                       )
 
 
     def on_event(self, event):
@@ -78,11 +83,20 @@ class Player(creatures.Creature):
         """Takes a variable number of ['id', creatures.Creature()] list args
                 and adds them to the player roster dict
             Also appends the id to the roster_ids list
+
+            Takes a variable number of creatures.Creature() args and adds
+            them to the player roster.
+            Also adds the creature.name to the roster_ids list
         """
+        '''
         for elem in id_instance:
             self.roster[elem[0]] = elem[1]
             self.roster_ids.append(elem[0])
             print(self.roster)
+        '''
+
+        for crit in id_instance:
+            self.roster[crit.name] = crit
 
     def turn_init(self):
         """Assembles the agents valid_actions list
@@ -139,7 +153,16 @@ class Player(creatures.Creature):
         """
         return self.roster[id].animations['idle'][0]
 
-    def summon(self): pass    
+    def summon(self): pass  
+
+    def get_roster(self):
+        '''
+        thumbs = {}
+        for elem in self.roster:
+            thumbs[elem] = self.get_roster_thumbs(elem)
+        return self.roster, thumbs 
+        '''
+        return self.roster 
 
     # NOT IMPLEMENTED
     def get_roster_ids(self, num): 

@@ -98,7 +98,7 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
         x = self.pos[0] - cam_pos[0]
         y = self.pos[1] - cam_pos[1]
         surface.blit(self.state.animation[self.state.curr_frame], (x, y))
-        pygame.draw.rect(surface, (255, 0, 0), self.rect, 1)
+        #pygame.draw.rect(surface, (255, 0, 0), self.rect, 1)
 
     def draw_action(self, surface, cam_pos):
         """Calls the draw method for the current action being taken
