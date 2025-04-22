@@ -22,7 +22,6 @@
 
 import pygame
 
-from borg import Borg
 import camera
 import constants
 

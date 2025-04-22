@@ -4,7 +4,6 @@ from abc import ABC
 import setup
 
 import assets
-from borg import Borg
 import camera
 import constants
 import events

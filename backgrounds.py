@@ -1,3 +1,7 @@
+"""backgrounds.py
+Contains the Bgr class, which is responsible for drawing the background sprite to the window.
+"""
+
 class Bgr:
     def __init__(self, sprite):
         self.sprite = sprite
