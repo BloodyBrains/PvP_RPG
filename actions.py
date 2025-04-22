@@ -7,7 +7,6 @@ import os
 
 import pygame
 
-import input
 
 import buttons
 import camera

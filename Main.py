@@ -58,7 +58,6 @@ import creature_states
 import events
 import game_control
 import game_states
-import input
 import iso_grid
 #import network
 import player

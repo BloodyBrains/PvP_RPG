@@ -7,7 +7,6 @@ import os
 
 import pygame
 
-import input
 
 import actions
 import assets
