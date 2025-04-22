@@ -9,6 +9,7 @@ import actions
 import constants
 import creature_states
 import events
+from globals import GlobalState
 #import iso_grid
 from resource_manager import get_images_from_sheet
 
@@ -19,7 +20,11 @@ SPRITE_H = 80
 SPEED = 4
 
 class Creature(abc.ABC, pygame.sprite.Sprite):
-    def __init__(self, name='', pos=(0, 0), sprite_sheet=None):
+    listen_types = [
+            pygame.MOUSEBUTTONDOWN,
+        ]
+    
+    def __init__(self, name='', pos=(0, 0), sprite_sheet=None, render_layer=1):
         super().__init__()
         #self.ev_mgr = event_manager
         self.name = name
@@ -32,10 +37,11 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
             self.sprites = get_images_from_sheet(sprite_sheet, SPRITE_W, SPRITE_H)
             self.width = self.sprites[0].get_width()
             self.height = self.sprites[0].get_height()
+        self.render_layer = render_layer # The layer this sprite is rendered on
+
+        #TODO: Make this a constant
         self.anim_speed = 8
-        self.listen_types = [
-            constants.EV_MOUSE_CLICK
-        ]
+        
         self.iso_pos = None # tuple position with respect to the isometric
                             # battle grid
         
@@ -89,8 +95,8 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
         # Handle position adjustment for camera movement
         # TO DO: Maybe do this in the creature state?
         #   I don't like calling creature.update() and creature.run_state()
-        x = self.pos[0] + self.x_speed
-        y = self.pos[1] + self.y_speed
+        x = (self.pos[0] + self.x_speed)
+        y = (self.pos[1] + self.y_speed)
         self.pos = (x, y)
         self.rect.move_ip(self.x_speed, self.y_speed)
 
@@ -98,7 +104,9 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
         x = self.pos[0] - cam_pos[0]
         y = self.pos[1] - cam_pos[1]
         surface.blit(self.state.animation[self.state.curr_frame], (x, y))
-        #pygame.draw.rect(surface, (255, 0, 0), self.rect, 1)
+        rect = (x, y, self.width, self.height)
+        temp = pygame.Rect((self.rect[0] - cam_pos[0], self.rect[1] - cam_pos[1]), (self.width, self.height))
+        pygame.draw.rect(surface, (0, 255, 0), temp, width=1)
 
     def draw_action(self, surface, cam_pos):
         """Calls the draw method for the current action being taken
@@ -133,14 +141,21 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
     @abc.abstractmethod
     def take_turn(self, action): pass
 
-    def notify(self, event):
+    def notify(self, event, **event_data):
+        """-Check which event_type we're dealing with
+        """
         stop_checking = False
-        if isinstance(event, events.MouseEvent):
-            if self.rect.collidepoint(event.pos):
-                ev = events.AgentClicked(self.name)
-                self.ev_mgr.post(ev)
+        if event == pygame.MOUSEBUTTONDOWN:
+            x = event_data.get('event_data')[0] + GlobalState.active_camera.pos[0]
+            y = event_data.get('event_data')[1] + GlobalState.active_camera.pos[1]
+            click_pos = (x, y)
+            if self.rect.collidepoint(click_pos):
+                events.queue_event(events.EV_AGENT_CLICKED, agent=self)
+                #ev = events.AgentClicked(self.name)
+                #self.ev_mgr.post(ev)
                 stop_checking = True
                 return stop_checking
+            else: return stop_checking
         '''
         if agent.rect.collidepoint(pos): 
                         cls.selected_agent = agent
@@ -156,6 +171,37 @@ class Creature(abc.ABC, pygame.sprite.Sprite):
                             click_handled = True
                             break
         '''
+    
+    def turn_init(self):
+        """Assembles the agents valid_actions list
+        """
+        # Assess the current state of the battle
+        # Assemble valid_actions list
+        # Assemble BattleScreen.turn_menu
+        # Set turn_state to 'update'
+
+        # check if new summons are available
+        '''
+        for creature in self.roster.values():
+            for item in creature.requirements.items():
+                if self.requirements[item[0]] >= item[1]:
+                    self.summon_add(agent)
+        '''
+
+        # Check for action reqs; assemble valid_actions list
+        self.valid_actions = []
+        #for action in self.actions.values():
+        #    if action.check_reqs():
+        #        self.valid_actions.append(action.ID)
+        self.check_action_reqs()
+
+        # assemble turn menu from valid_actions
+        #game_states.BattleScreen.make_turn_menu(self.valid_actions) #TODO: this is ugly
+
+    def check_action_reqs(self):
+        for action in self.actions:
+            if self.actions[action](self):
+                self.valid_actions.append(action)
             
 
 

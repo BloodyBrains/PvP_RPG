@@ -17,8 +17,8 @@ TILE_H_HALF = 48
 CREATURE_W = 96     # dimensions of creature sprite
 CREATURE_H = 80
 CAM_SPEED = 3
-CAM_STARTX = -672
-CAM_STARTY = 96
+CAM_STARTX = 0 #-672
+CAM_STARTY = 0 #96
 MOVE_SPEED = 3
 SLOPE_MOVE = (2, 1) # kinda like a slope for moving along an 
                     #   isometric row/column
@@ -40,3 +40,4 @@ EV_UPDATE = 11
 EV_AGENT_CLICKED = 12
 EV_CAM_MOVE = 13
 EV_ACTION_END = 14
+EV_TILE_CLICKED = 15

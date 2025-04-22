@@ -17,6 +17,9 @@ class Camera:
         self.x_speed = 0
         self.y_speed = 0
         self.is_active = False
+
+        # TODO: Gets registered when the camera is activated
+        #events.register_listener(self, self.listen_types)
         
 
     def notify(self, event, **event_data):

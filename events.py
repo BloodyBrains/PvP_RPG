@@ -22,7 +22,7 @@
 
 import pygame
 
-import borg
+from borg import Borg
 import camera
 import constants
 
@@ -47,10 +47,10 @@ def post(ev_type, data):
 #listeners = {} #{pygame.event.type: [listener<Any>]} listeners must implement .notify() 
 
 #Event Types
-ACTION_END = pygame.USEREVENT       #use pygame.event.post(ACTION_END) when an
+#ACTION_END = pygame.USEREVENT       #use pygame.event.post(ACTION_END) when an
                                     #  action finishes to get a message to 
                                     #  the eventManager
-CHANGE_STATE = pygame.USEREVENT + 1
+#CHANGE_STATE = pygame.USEREVENT + 1
 
 def register_listener(listener, event_type):
     """Registers the caller(listener) to the event(from event_type) to be
@@ -70,15 +70,23 @@ def register_listener(listener, event_type):
     # Loop through the events were listening for, finding their keys
     #  in the dict and appending the listener to the associated list 
     for event in event_type:
+        #print(EventManager.listeners)
         if event in EventManager.listeners:
             if listener not in EventManager.listeners[event]:
                 EventManager.listeners[event].append(listener)
             else:
                 print('object tried to double register')
+
+            # If a click event, sort the list of listeners by their render_layer
+            if event == pygame.MOUSEBUTTONDOWN:
+                EventManager.listeners[event].sort(key=lambda x: x.render_layer, reverse=True)
+                print('Mouse Click Event Registered: ', EventManager.listeners[event])
+            
         else:
             EventManager.listeners[event] = [listener]
+            
 
-    print(EventManager.listeners, ' REG\n')
+    #print(EventManager.listeners, ' REG\n')
 
     '''
     for ev in args:
@@ -117,13 +125,13 @@ def register_callback(listener, event, callback):
         #make new entry
         listeners_callback[event] = [(listener, callback)]
 
-def unregister_listener(listener, *event_type):
+def unregister_listener(listener, event_type):
     for ev in event_type:
         if ev in EventManager.listeners:
-            if listener in EventManager.listeners[event_type]:
-                EventManager.listeners[event_type].remove(listener)
-                if EventManager.listeners[event_type] == []:
-                    del EventManager.listeners[event_type]
+            if listener in EventManager.listeners[ev]:
+                EventManager.listeners[ev].remove(listener)
+                #if EventManager.listeners[ev] == []:
+                #    del EventManager.listeners[ev]
             else: print('listener not registered for the event')
         else: print('the event is not listed')
 
@@ -156,27 +164,47 @@ def unregister_callback(listener, *event_type):
         
 def notify(listener, event): pass
 
+def queue_event(custom_event_type, **event_data):
+    """Queues a custom pygame.event.Event() object to the pygame event queue."""
+    ev = pygame.event.Event(custom_event_type, event_data)
+    pygame.event.post(ev)
 #-------------------------------------------------------------------------
 
 
 
-class Event:
+class CustomEvent:
     """Baseclass for events
     """
     def __init__(self, name='generic'):
         self.name = name
 
 
-class EventManager(borg.Borg):
+class EventManager:
+    """
+    Event manager for the game. This is a singleton class that manages the
+    event system for the game. It is responsible for registering and unregistering
+    listeners, posting events, and handling user input.
+    """
+
+    _instance = None # Singleton flag used to prevent multiple instances
+
     from weakref import WeakKeyDictionary #Use this so unused listeners will be
                                           #   auto unregistered
     listeners = {}       # key(event):value(list(listeners))
     listeners_callback = {}  # key(event): value(list(tuple(listener, callback())))
 
+    custom_event_queue = [] # List
 
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
     def __init__(self):
-        super().__init__()
+        if not hasattr(self, 'initialized'):
+            self.initialized = True
+            self.listeners = defaultdict(list)
+            self.listeners_callback = defaultdict(list)
 
     def get_listeners(self):
         return self.listeners
@@ -196,7 +224,7 @@ class EventManager(borg.Borg):
             listener {class instance} -- Must implement notify()
         
         Keyword Arguments:
-            event_types {list[int]} -- List of all event types to listen for (default: {(constants.EV_NONE)})
+            event_types {tuple(int, )} -- List of all event types to listen for (default: (constants.EV_NONE, ))
         """
         if event_types is None: event_types = [constants.EV_NONE]
         self.listeners[ listener ] = event_types
@@ -267,32 +295,47 @@ class EventManager(borg.Borg):
         '''
 
         for event in pygame.event.get():
-            if event.type in EventManager.listeners:
-                if event.type == pygame.QUIT:
+
+            if event.type == pygame.QUIT:
                     self.post(event.type)
                     return
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    self.post(event.type, info = pygame.mouse.get_pos())
-                    continue
-                else:
-                    self.post(event.type)
-                    continue
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                #DEBUG: 
+                print('Mouse Clicked at: ', pygame.mouse.get_pos()) 
+                print_listeners()
+                self.post(event.type, info = pygame.mouse.get_pos())
+                continue
+            if event.type == pygame.MOUSEBUTTONUP:
+                #DEBUG:
+                print('Mouse Released at: ', pygame.mouse.get_pos()) 
+                self.post(event.type, info = pygame.mouse.get_pos())
+                continue
+           # else:
+            #    self.post(event.type)
+             #   continue
 
             if event.type == pygame.KEYDOWN:
                 if event.key in EventManager.listeners:
+                    print('Event posted: ', event)
                     self.post(event.key, info = event.type)
                     continue
             if event.type == pygame.KEYUP:
                 if event.key in EventManager.listeners:
                     self.post(event.key, info = event.type)
                     continue
-                    '''
+            if event.type not in EventManager.listeners:
+                continue
+            else:
+                self.post(event.type, info = event.__dict__)
+                continue
+            '''
                     if event.type == pygame.KEYDOWN:
                         self.post(event.type, info = event)
                     if event.type == pygame.KEYUP:
                         self.post(event.type, info = event)
                     else:
                         self.post(event.type)
+                        ''''''
                     '''
 
         '''
@@ -372,31 +415,37 @@ class EventManager(borg.Borg):
         '''
 
 
-# EVENT TYPES -------------------------------------------------------------------------------
-class ActionEnd(Event):
+# CUSTOM EVENT TYPES -------------------------------------------------------------------------------
+class ActionEnd(CustomEvent):
     def __init__(self):
         self.id = constants.EV_ACTION_END
 
-class AgentClick(Event):
+EV_AGENT_CLICKED = pygame.event.custom_type()
+class AgentClick(CustomEvent):
     def __init__(self, agent_id):
         self.id = agent_id
 
-class KeyDown(Event):
+EV_BUTTON_CLICKED = pygame.event.custom_type()
+
+EV_CHANGE_GAME_STATE = pygame.event.custom_type() #TODO: State changes should be handled by the state machine
+
+
+class KeyDown(CustomEvent):
     def __init__(self, key_id):
         self.id = key_id
 
 
-class KeyUp(Event):
+class KeyUp(CustomEvent):
     def __init__(self, key_id):
         self.id = key_id
 
 
-class MouseEvent(Event):
+class MouseEvent(CustomEvent):
     def __init__(self, mouse_pos):
         self.pos = mouse_pos
         self.id = constants.EV_MOUSE_CLICK
 
-class CameraMove(Event):
+class CameraMove(CustomEvent):
     def __init__(self, offset):
         """Triggered when camera is moved by means other than pressing arrow keys.
         
@@ -407,11 +456,26 @@ class CameraMove(Event):
         self.id = constants.EV_CAM_MOVE
         self.offset = offset
         
-class QuitEvent(Event):
+class QuitEvent(CustomEvent):
     """
     Quit event.
     """    
     def __init__(self):
         self.id = constants.EV_QUIT
+
+EV_TILE_CLICKED = pygame.event.custom_type()
+class TileClicked(CustomEvent):
+    def __init__(self, tile_id):
+        self.id = constants.EV_TILE_CLICKED
+
+#DEBUG: -----------------------------------------------------------------------
+def print_listeners():
+    # Create a reverse mapping of Pygame constants to their names
+    CONSTANT_NAMES = {value: name for name, value in vars(pygame).items() if isinstance(value, int)}
+
+    # Iterate through the listeners dictionary and format the output
+    for event_type, listeners in EventManager.listeners.items():
+        event_name = CONSTANT_NAMES.get(event_type, f"Unknown Event ({event_type})")  # Get the event name or fallback to the value
+        print(f"{event_name}: {listeners}")
 
 

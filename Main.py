@@ -30,6 +30,8 @@
 #           after pygame.init()
 #           Or, make a load_image function to wrap pygame.load.image()
 #
+# BUGS: Rows and columns are getting swapped.
+#
 # RESEARCH: 
 #           pygame.init() - faster to manually init pygame modules as needed?
 #           pygame.sprite.Groups - put all sprites in a group for faster
@@ -46,7 +48,6 @@ pygame.font.init()
 import setup
 
 
-#import server
 import assets
 import buttons
 import camera

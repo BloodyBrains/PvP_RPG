@@ -4,7 +4,7 @@ from abc import ABC
 import setup
 
 import assets
-import borg
+from borg import Borg
 import camera
 import constants
 import events
@@ -24,7 +24,12 @@ def get_player_roster():
     return Game.player1.roster, Game.player1.roster_ids, tuple(thumbs)
 
 
-class Game(borg.Borg):
+class Game:
+    """
+    A singleton class that manages the main game loop and delegates
+    to the other game components.
+    """
+    _instance = None # Singleton flag used to prevent multiple instances
 
     STATE_START = "start_screen"
     STATE_EDIT = 'roster_edit'
@@ -38,55 +43,64 @@ class Game(borg.Borg):
     state_flag = ''
 
     listen_types = (pygame.QUIT, 
-                    events.CHANGE_STATE
+                    events.EV_CHANGE_GAME_STATE #TODO: GameState changes should be triggered internally
                    )
 
     player1 = None
 
-    #!!!events_manager, clock, game_win, cam
+
+    '''Singleton pattern. This class should only be instantiated once.
+    Called by Python upon instantiation, before __init__.'''
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self):
-        borg.Borg.__init__(self)
-        self.ev_manager = events.EventManager()
-        events.register_listener(self, Game.listen_types)
-        #for i in range(len(self.listen_types)):
-        #    events.register_callback(self, self.listen_types[i])
+        if not hasattr(self, 'initialized'):
+            self.initialized = True
+            self.state_flag = ''
+            self.is_running = True
+            self.ev_manager = events.EventManager()
+            events.register_listener(self, Game.listen_types)
+            #for i in range(len(self.listen_types)):
+            #    events.register_callback(self, self.listen_types[i])
 
-        self.clock = pygame.time.Clock()
-        #self.game_win = pygame.display.set_mode((constants.SCREEN_WIDTH, 
-        #                                         constants.SCREEN_HEIGHT))
-        self.game_win = setup.window
-        self.cam = camera.Camera()
-        self.battle_grid = iso_grid.IsoGrid()
+            self.clock = pygame.time.Clock()
+            #self.game_win = pygame.display.set_mode((constants.SCREEN_WIDTH, 
+            #                                         constants.SCREEN_HEIGHT))
+            self.game_win = setup.window
+            #self.cam = camera.Camera()
+            #self.battle_grid = iso_grid.IsoGrid()
 
-        self.states = {}
-        self.curr_state = None
+            self.states = {}
+            self.curr_state = None
 
-        self.is_running = True
 
-        # LOAD
-        #assets.load_assets()
+            # LOAD
+            #assets.load_assets()
 
-        # Init the player, they must be persistent throughout all game states
-        Game.player1 = player.Player('player1', sprite_sheet=assets.player_sprites['player'])
-        self.player2 = player.Player('player2', sprite_sheet=assets.player_sprites['player'])
+            # Init the player, they must be persistent throughout all game states
+            Game.player1 = player.Player('player1', sprite_sheet=assets.player_sprites['player'])
+            self.player2 = player.Player('player2', sprite_sheet=assets.player_sprites['player'])
 
-        self.states = {}
 
-        '''
-        self.states.update(
-            {'start_screen':game_states.StartScreen(assets.startstate_sprites, self.ev_manager, self),
-             'roster_edit':game_states.RosterEdit(assets.rosteredit_sprites, self.player1, self.ev_manager, self),
-             'battle_screen':game_states.BattleScreen(assets.battlestate_sprites, self.player1, self.player2, self.ev_manager, self)}
-        )
-        '''
+            '''
+            self.states.update(
+                {'start_screen':game_states.StartScreen(assets.startstate_sprites, self.ev_manager, self),
+                'roster_edit':game_states.RosterEdit(assets.rosteredit_sprites, self.player1, self.ev_manager, self),
+                'battle_screen':game_states.BattleScreen(assets.battlestate_sprites, self.player1, self.player2, self.ev_manager, self)}
+            )
+            '''
 
-        try:
-            #self.change_state(self.STATE_START)
-            #self.curr_state = self.states['start_screen']
-            self.curr_state = game_states.StartScreen(Game.STATE_START)
-            self.state_flag = Game.STATE_START
-        except IndexError:
-            print("idiot")
+            # Set the initial game state
+            try:
+                #self.change_state(self.STATE_START)
+                #self.curr_state = self.states['start_screen']
+                self.curr_state = game_states.StartScreen(Game.STATE_START)
+                self.state_flag = Game.STATE_START
+            except IndexError:
+                print("idiot")
 
 
     def run(self):
@@ -155,7 +169,7 @@ class Game(borg.Borg):
                                                          self.player1.get_roster()
                                                          )
             elif state_id == self.STATE_BATTLE:
-                self.curr_state = game_states.BattleScreen(game_states.STATE_BATTLE, self.player1, self.player2, self.cam, self.battle_grid)
+                self.curr_state = game_states.BattleScreen(game_states.STATE_BATTLE, self.player1, self.player2)
         else:
             print("No game state: ", state_id)
 

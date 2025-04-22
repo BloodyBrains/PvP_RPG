@@ -57,7 +57,7 @@ class Player(creatures.Creature):
         self.add_actions(action_hooks)
         #self.valid_actions = [] #List of actions the agent can currently perform
 
-        # Give the player some creatures. Change later!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # Give the player some creatures for testing. TODO: Change later!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         self.requirements['red'] = 1
         self.requirements['white'] = 1
         self.roster_add(creatures.ChaosCreature(sprite_sheet = assets.chaos_sprites['chaos'],
@@ -122,7 +122,7 @@ class Player(creatures.Creature):
         self.check_action_reqs()
 
         # assemble turn menu from valid_actions
-        #game_states.BattleScreen.make_turn_menu(self.valid_actions) #TO DO: this is ugly
+        #game_states.BattleScreen.make_turn_menu(self.valid_actions) #TODO: this is ugly
 
     def take_turn(self):
         if self.action is not None:
