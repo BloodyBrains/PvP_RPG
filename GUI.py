@@ -9,23 +9,61 @@ import constants
 from events import register_listener
 
 
+class GUIManager:
+    """
+    Manages GUI objects in the game.
+    Handles activation, deactivation, and rendering of GUI objects.
+    """
+    
+    def __init__(self):
+        self.gui_objects = {}
+        self.active_gui = None
 
+    def register_gui(self, gui_object):
+        """Register a GUI object with the manager."""
+        self.gui_objects[gui_object.ID] = gui_object
 
-class HudObject(abc.ABC):
-    def __init__(self) -> None:
+    def activate_gui(self, gui_id):
+        """Activate a GUI object by its ID."""
+        if gui_id in self.gui_objects:
+            if self.active_gui:
+                self.active_gui.deactivate()
+            self.active_gui = self.gui_objects[gui_id]
+            self.active_gui.activate()
+
+    def draw(self, game_win):
+        """Draw all active GUI objects."""
+        if self.active_gui and self.active_gui.is_active:
+            self.active_gui.draw(game_win)
+
+class GUIobject(abc.ABC):
+    """
+    Abstract base class for GUI objects in the game.
+    """
+    
+    def __init__(self, gui_mgr, ID="menu", pos=(0, 0), rect=pygame.Rect(0,0,32,32), sprite=None, 
+                 font=(None, constants.DEFAULT_FONT_SIZE),
+                 render_layer=2) -> None:
         super().__init__()
-        '''
-        pos[x,y]
-        rect
-        sprite
-        font
-        font_size
-        clickable
-        
-        '''
+        self.gui_mgr = gui_mgr
+        self.ID = ID
+        self.pos = pos
+        self.rect = rect
+        self.sprite = sprite
+        self.font = pygame.font.Font(font[0], font[1])
+        self.render_layer = render_layer
+
+        self.is_active = False
+
+    @abc.abstractmethod
+    def activate(self):
+        """Activate the GUI object, making it visible and interactive.
+        Register with the GUIManager and set is_active to True."""
+        pass
 
 
-class TurnMenu(HudObject):
+
+class TurnMenu(GUIobject):
     def __init__(self, ) -> None:
         super().__init__()
         #events.register_listener(self, constants.MOUSELEFT)
@@ -96,19 +134,7 @@ class TurnMenu(HudObject):
         """
         pass
 
-class HUDManager:
-    # Responsible for HUD related logic and objects.
-    # eg. update, draw, instantiation, event delegation
-    #       for menus, maps etc.
 
-    active_HUDs = list(None)
-
-    def __init__(self) -> None:
-        pass
-
-    def update(self): pass
-
-    def draw(self): pass
 
     
         

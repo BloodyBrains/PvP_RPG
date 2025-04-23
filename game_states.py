@@ -492,12 +492,13 @@ class BattleScreen(GameState):
     ACTION = 1
 
 
-    def __init__(self, name, player1, player2): 
+    def __init__(self, name, player1, player2, gui): 
         super().__init__(name)
         self.bgr = backgrounds.Bgr(self.bgr_sprite)
         #self.tile_selected = images['tile_selected']
         self.player1 = player1
         self.player2 = player2
+        self.gui = gui # GUI manager to handle rendering of buttons, menus, etc.
         #self.ev_mgr = event_manager
         
         events.register_listener(self, self.listen_types)

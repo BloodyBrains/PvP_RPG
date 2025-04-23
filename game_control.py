@@ -8,6 +8,7 @@ import camera
 import constants
 import events
 import game_states
+import GUI
 import iso_grid
 import player
 
@@ -64,6 +65,8 @@ class Game:
             events.register_listener(self, Game.listen_types)
             #for i in range(len(self.listen_types)):
             #    events.register_callback(self, self.listen_types[i])
+
+            self.gui = GUI.GUIManager()
 
             self.clock = pygame.time.Clock()
             #self.game_win = pygame.display.set_mode((constants.SCREEN_WIDTH, 
@@ -168,7 +171,7 @@ class Game:
                                                          self.player1.get_roster()
                                                          )
             elif state_id == self.STATE_BATTLE:
-                self.curr_state = game_states.BattleScreen(game_states.STATE_BATTLE, self.player1, self.player2)
+                self.curr_state = game_states.BattleScreen(game_states.STATE_BATTLE, self.player1, self.player2, self.gui)
         else:
             print("No game state: ", state_id)
 
