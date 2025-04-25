@@ -12,6 +12,7 @@ BLUE = (0, 0, 128)
 DEFAULT_FONT = 'freesansbold.ttf'
 DEFAULT_FONT_SIZE = 14
 
+#Graphics
 SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 480
 TILE_WIDTH = 192
@@ -26,6 +27,15 @@ CAM_STARTY = 0 #96
 MOVE_SPEED = 3
 SLOPE_MOVE = (2, 1) # kinda like a slope for moving along an 
                     #   isometric row/column
+
+
+# GUI Constants----------------------
+    # Menu IDs
+TURN_MENU_ID = 'turn_menu'
+
+#    Menu positions
+TURN_MENU_POS = (100, 370)
+
 
 # Event types
 EV_NONE = -1

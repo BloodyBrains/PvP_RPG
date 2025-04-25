@@ -66,7 +66,7 @@ class Game:
             #for i in range(len(self.listen_types)):
             #    events.register_callback(self, self.listen_types[i])
 
-            self.gui = GUI.GUIManager()
+            self.gui = GUI.gui_manager
 
             self.clock = pygame.time.Clock()
             #self.game_win = pygame.display.set_mode((constants.SCREEN_WIDTH, 

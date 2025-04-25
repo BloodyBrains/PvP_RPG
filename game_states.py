@@ -17,6 +17,7 @@ import constants
 import creatures
 import events
 from functions import iso_to_cart
+import GUI
 import iso_grid
 import player 
 from globals import GlobalState # global instance of camera from BattleScreen()
@@ -745,8 +746,9 @@ class BattleScreen(GameState):
             #                       (agent.width, agent.height))
             #pygame.draw.rect(game_win, (255, 0, 0), new_rect, 1)
 
-        if self.turn_menu.is_active:
-            self.turn_menu.draw(game_win)
+        #if self.turn_menu.is_active:
+        #    self.turn_menu.draw(game_win)
+        self.gui.draw(game_win)
 
     def notify(self, event, **event_data):
         """ABC GameState forced implementation. Called from EventManager.post()
@@ -763,12 +765,25 @@ class BattleScreen(GameState):
                 # Update the selected agent to the clicked agent
                 self.selected_agent = self.agents[clicked_agent.name]
                 self.tile_selected_pos = iso_to_cart(self.selected_agent.iso_pos)
+                if self.selected_agent == self.active_agent:
+                    # If the selected agent is the active agent, activate the turn menu
+                    self.gui.activate_menu(constants.TURN_MENU_ID, 
+                                           agent_actions=self.active_agent.valid_actions)
+                    #self.turn_menu.activate(self.active_agent.valid_actions)
+                else:
+                    # If the selected agent is not the active agent, deactivate the turn menu
+                    self.gui.deactivate_menu(constants.TURN_MENU_ID)
+                    #self.turn_menu.deactivate()
                 print(f"Agent selected: {self.selected_agent.name} at {self.tile_selected_pos}")
             else:
                 print("EV_AGENT_CLICKED event received, but no agent data was provided.")
 
         if event == events.EV_TILE_CLICKED:
             # Extract the clicked tile position from the event data
+            self.selected_agent = None
+            if constants.TURN_MENU_ID in self.gui.gui_objects:
+                self.gui.deactivate_menu(constants.TURN_MENU_ID)
+                
             clicked_tile = event_data['event_data'].get('clicked_tile')
             if clicked_tile:
                 # Update the tile_selected_pos to the new tile's position
@@ -827,7 +842,7 @@ class BattleScreen(GameState):
         #self.iso_grid = iso_grid.IsoGrid(self.ev_mgr)
         
         #self.turn_menu = TurnMenu(self.ev_mgr)
-        self.turn_menu = TurnMenu(self)
+        #self.turn_menu = GUI.TurnMenu(self.gui)
         #cls.turn_menu.add_buttons('move')
 
         # Create the two players
@@ -891,14 +906,17 @@ class BattleScreen(GameState):
         # Append the next turn to the list
         # TO DO: Maybe wrap this in a set_active_agent() method
         agent = self.turn_order.pop(0)
-        self.active_agent = self.agents[agent]
+        #self.active_agent = self.agents[agent]
+        self.active_agent = self.agents['player1']
         self.active_agent.turn_init()
         self.turn_order.append(self.calc_turn_order(1))
         #self.turn_menu.activate(self.active_agent.valid_actions)
+        self.gui.activate_menu(constants.TURN_MENU_ID, 
+                               agent_actions=self.active_agent.valid_actions)
         self.selected_agent = self.active_agent
         self.tile_selected_pos = iso_to_cart(self.selected_agent.iso_pos)
         self.cam.center(self.selected_agent.rect.center)
-        self.turn_menu.is_active = True
+        #self.turn_menu.is_active = True
 
         self.internal_state = 'open'
 
