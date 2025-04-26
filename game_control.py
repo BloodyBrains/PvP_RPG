@@ -1,6 +1,6 @@
 # game_control.py
+
 import pygame
-from abc import ABC
 import setup
 
 import assets
@@ -11,17 +11,6 @@ import game_states
 import GUI
 import iso_grid
 import player
-
-class Controller(ABC):
-
-    def notify(self, sender: object, event: str) -> None:
-        pass
-
-def get_player_roster():
-    thumbs = []
-    for agent in Game.player1.roster:
-        thumbs.append(Game.player1.get_roster_thumbs(agent))
-    return Game.player1.roster, Game.player1.roster_ids, tuple(thumbs)
 
 
 class Game:
